@@ -1,7 +1,7 @@
 %181016
 %Dashaway
 %燃烧参数计算
-%圆柱装药，等面燃烧
+
 
 %190117
 %增加注释
@@ -9,6 +9,7 @@
 
 %190212
 %换为跑道型内孔
+%更改参数
 
 clear;
 close all;
@@ -20,18 +21,19 @@ n = 1:1:long;       %绘图横坐标
 dt = 5e-5;      %步进值
 %已知常量
 p0 = 1.02e5;    %初始压强(Pa)
-Dr = 0.132;       %燃烧室外径(m)
-D = 0.0265;         %药柱初始外径(m)
-d = 0.0125;       %药柱初始内径(m)
-ep = (D - d)/2;     %总肉厚(m)
-n_s = 17;    %药柱数量
+Dr = 0.150;       %燃烧室外径(m)
+r = 0.00625;        %微圆弧(m)
+l = 0.04375;        %中心距(m)
+R = 0.05;       %中心孔(m)
+
+n_s = 6;    %药柱数量
 Lp = 0.22;      %装药长度(m)
 gamma = 1.2;        %比热比
 rho_p = 1730;       %密度(kg/m^3)
 n_p = 0.302;      %压强指数
 c = 1600;       %特征速度(m/s)
 At = 1.884785e-3;     %喷管喉部面积(m^2)
-r0 = 5e-3;      %?初始燃速(m/s)
+rb_0 = 5e-3;      %?初始燃速(m/s)
 alpha_r = 1.7e-4;        %?燃速系数
 phi_alpha = 1;       %?侵蚀函数
 phi_m = 1;      %?
@@ -40,25 +42,32 @@ phi_m = 1;      %?
 
 Gamma = ( (2 / (gamma + 1))^( (gamma + 1) / (2*(gamma - 1)) ) ) ...
     *sqrt(gamma);      %比热比函数
+%判别条件
+e_a = l*sqrt((1 - cos(pi / n_s)) / 2) - r;       %第一阶段
+e_b = Dr/2 - r - l;
 %周长参数
-s0 = n_s*pi*d;      %燃烧面初始边长
-    %s =  n_s*pi*(d + e);
+s_a0 = 2*pi*(R + l + n_s*r) + 2*pi*n_s*(r);      %第一阶段燃烧面初始边长
+    %s_a =  2*pi*(R + l + e) + 2*pi*n_s*(r + e);    %第一阶段燃烧周长公式
+    %s_b = 4*n_s*(r + e)*asin( (l*sin(pi / (2*n_s))) / (r + e) ) ...   %第二阶段燃烧周长公式
+        %+ 2*pi*(l + R + e)
 %通气面积参数
-Ap0 = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*d^2 / 4;
-    %Ap = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*(d + e)^2 / 4;
-
+Ap_a0 = 2*pi*l*r + n_s*pi*r^2 + pi*R^2;     %第一阶段初始通气面积
+    %Ap_a = 2*pi*l*(r + e) + n_s*pi*(r + e)^2 + pi*(R + e)^2;   %第一阶段通气面积
+    %Ap_b = 2*n_s*((r + e)^2)*asin( (l*sin(pi / (2*n_s))) / (r + e) ) ...  %第一阶段通气面积
+        %+ 2*pi*l*(r + e) + pi*(R + e)^2;
+        
 
 %变量
 %计算用变量（已赋初值）
 p = p0*ones(1,long);        %实际压强(Pa)
-r = r0*ones(1,long);     %燃速(m/s)
+rb = rb_0*ones(1,long);     %燃速(m/s)
 e = 0*ones(1,long);     %已烧去肉厚(m)
-s = s0*ones(1,long);     %燃烧面实际边长(m)
-m_b = rho_p*s0*Lp*r0*ones(1,long);     %燃气生成率(kg/s)
+s = s_a0*ones(1,long);     %燃烧面实际边长(m)
+m_b = rho_p*s_a0*Lp*rb_0*ones(1,long);     %燃气生成率(kg/s)
 m_p = (phi_m*p0*At / c)*ones(1,long);     %质量流率(kg/s)
 F = 2000*(p0*At / c)*ones(1,long);     %推力(?)
-Ab = s0*Lp*ones(1,long);     %燃烧面积(m^2)
-Ap = Ap0*ones(1,long);     %通气面积(m^2)
+Ab = s_a0*Lp*ones(1,long);     %燃烧面积(m^2)
+Ap = Ap_a0*ones(1,long);     %通气面积(m^2)
 Vg = Ap*Lp;     %自由体积(m^3)
 %循环变量
 i = 1;
@@ -71,8 +80,10 @@ p_a = rho_p*alpha_r*phi_alpha*Gamma^2*c^2;
 p_b = phi_m*Gamma^2*c*At;
 
 
+
+
 %循环计算
-while e <= ep
+while e <= e_b
     %龙格库塔逐步计算，计算出新的压强值
     %dp = p_a*(Ab(i) / Vg(i))*p(i)^n_p  - p_b*p(i) / Vg(i);
     k1 = p_a*(Ab(i) / Vg(i))*( p(i)^n_p ) - p_b*p(i) / Vg(i);
@@ -85,14 +96,26 @@ while e <= ep
 
     %参数修正
     %逐项计算其他参数的新值
-    r(i) = alpha_r*p(i)^n_p;
-    e(i) = e(i - 1) + r(i)*dt;
+    rb(i) = alpha_r*p(i)^n_p;
+    e(i) = e(i - 1) + rb(i)*dt;
+    %分阶段计算燃烧周长和通气面积
+    if(e < e_a)
+        s(i) = 2*pi*(R + l + e(i)) + 2*pi*n_s*(r + e(i));
+        Ap(i) = 2*pi*l*(r + e(i)) + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2;
+    elseif(e < e_b)
+        tr =  asin( (l*sin(pi / (2*n_s))) / (r + e(i)) ) ;
+        s(i) = 4*n_s*(r + e(i))*asin( (l*sin(pi / (2*n_s))) / (r + e(i)) ) ...
+                + 2*pi*(l + R + e(i));
+        Ap(i) = 2*n_s*((r + e(i))^2)*asin( (l*sin(pi / (2*n_s))) / (r + e(i)) ) ...
+                + 2*pi*l*(r + e(i)) + pi*(R + e(i))^2;
+    else
+        s(i) = 2*pi*(R + l + e(i)) + 2*pi*n_s*(r + e(i));
+        Ap(i) = 2*pi*l*(r + e(i)) + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2;
+    end
     
-    s(i) = n_s*pi*(d + e(i));
-    Ap(i) = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*(d + e(i))^2 / 4;
     Ab(i) = s(i)*Lp;
     Vg(i) = Ap(i)*Lp;
-    m_b(i) = rho_p*Ab(i)*r(i);
+    m_b(i) = rho_p*Ab(i)*rb(i);
     m_p(i) = phi_m*p(i)*At / c;
     F(i) = 2000*m_p(i) + 4.4*At*(p(i)-p0);
     if i >= long
@@ -104,7 +127,7 @@ end
 i = i + 1;
 n(i:1:long) = [];
 p(i:1:long) = [];
-r(i:1:long) = [];
+rb(i:1:long) = [];
 e(i:1:long) = [];
 s(i:1:long) = [];
 m_b(i:1:long) = [];
