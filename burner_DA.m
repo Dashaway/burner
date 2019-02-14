@@ -55,26 +55,31 @@ e_d = sqrt( (D/2 - l*cos(trd/2))^2 + (l*sin(trd/2))^2 ) - r;    %3¡¢4½×¶Î¡¢°ëÔ²Ì
 %     e4 = ((e > e_b) & (e < e_c) & (e > e_d));
 
 %¼ÆËãÖĞ¼äÖµ
-as1 =  asin((D/2 - l) / (r + e));
-as2 =  asin( (l*sin(pi / (2*n_s))) / (r + e) );
-ac1 = acos( (4*l^2 + D^2 - 4*(r + e)^2) / 4*l*D ); 
-ac2 = acos( (4*(r + e)^2 + 4*l^2 - D^2) / (8*l*(r + e)) ); 
-
-
+%     as1 =  asin((D/2 - l) / (r + e));
+%     as2 =  asin( (l*sin(trd/2)) / (r + e) );
+%     ac1 = acos( (4*l^2 + D^2 - 4*(r + e)^2) / (4*l*D) ); 
+%     ac2 = acos( (4*(r + e)^2 + 4*l^2 - D^2) / (8*l*(r + e)) ); 
+% 
+%     s_a =  (4*pi*l*m_s) / (m_s + 1) + 2*pi*((R + e) + n_s*(r + e));    %µÚÒ»½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
+%     s_b = 2*n_s*(as1 + pi/2)*(r + e) + 2*n_s*(trr/2)*(l + R - r);  %µÚ¶ş½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
+%     s_c = 2*n_s*(r + e)*(ac2 + 2*as2 - pi) + 2*pi*R + 2*n_s*trr*(l - r);  %µÚÈı½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
+%     s_d = 2*n_s*(r + e)*(as2 - trd/2) + 2*pi*(R + e) + 2*n_s*trr*(l - r - e);  %µÚËÄ½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
+% 
+%     Ap_a = (4*pi*l*m_s*(r + e)) / (m_s + 1) ... %µÚÒ»½×¶ÎÍ¨ÆøÃæ»ı
+%         + n_s*pi*(r + e)^2 + pi*(R + e)^2;   
+%     Ap_b = n_s*(trr/2)*(R + e)^2 + n_s*(as1 + pi/2)*(r + e)^2 ...  %µÚ¶ş½×¶ÎÍ¨ÆøÃæ»ı
+%         + n_s*D*ac1 - n_s*l*(D/2)*sin(ac1) + 2*n_s*l*(r + e)*trr;
+%     %Ap_c = pi*(Dr^2)/4 - pi*(R + e)^2 - n_s*Dr*(pi/2 - ac1) ...%µÚÈı½×¶ÎÍ¨ÆøÃæ»ı
+%         %*(  Dr/2 - (r + e)*sin(as + pi / (2*n_s)) / sin(pi / (2*n_s))  );
+%     Ap_c = pi*(D^2)/4 - pi*(R + e)^2;  %µÚÈı½×¶ÎÍ¨ÆøÃæ»ı
+%     Ap_d = pi*(D^2)/4 - pi*(R + e)^2;  %µÚËÄ½×¶ÎÍ¨ÆøÃæ»ı
+    
 %ÖÜ³¤²ÎÊı
 s_a0 = (4*pi*l*m_s) / (m_s + 1) + 2*pi*(R + n_s*r);      %µÚÒ»½×¶ÎÈ¼ÉÕÃæ³õÊ¼±ß³¤
-    s_a =  (4*pi*l*m_s) / (m_s + 1) + 2*pi*((R + e) + n_s*(r + e));    %µÚÒ»½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
-    s_b = 2*n_s*(as1 + pi/2)*(r + e) + 2*n_s*(trr/2)*(l + R - r) ;  %µÚ¶ş½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
-    s_c = 2*n_s*(r + e)*(ac2 + 2*as2 - pi) + 2*pi*R + 2*n_s*trr*(l - r);  %µÚÈı½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
-    s_d = 2*n_s*(r + e)*(as2 - trd/2) + 2*pi*(R + e) + 2*n_s*trr*(l - r - e);  %µÚËÄ½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
+
 %Í¨ÆøÃæ»ı²ÎÊı
 Ap_a0 = (4*pi*l*m_s*r) / (m_s + 1) + n_s*pi*r^2 + pi*R^2;     %µÚÒ»½×¶Î³õÊ¼Í¨ÆøÃæ»ı
-    Ap_a = (4*pi*l*m_s*(r + e)) / (m_s + 1) ... %µÚÒ»½×¶ÎÍ¨ÆøÃæ»ı
-        + n_s*pi*(r + e)^2 + pi*(R + e)^2;   
-    Ap_b = n_s*(trr/2)*(R + e)^2 + n_s*(as1 + pi/2)*(r + e)^2 ...  %µÚ¶ş½×¶ÎÍ¨ÆøÃæ»ı
-        + n_s*D*ac1 - n_s*l*(D/2) + 2*n_s*l*(r + e)*trr;
-    Ap_c = pi*(D^2)/4 - pi*(R + e)^2;  %µÚÈı½×¶ÎÍ¨ÆøÃæ»ı
-    Ap_d = pi*(D^2)/4 - pi*(R + e)^2;  %µÚËÄ½×¶ÎÍ¨ÆøÃæ»ı
+
     
         
 
@@ -92,18 +97,23 @@ Ap = Ap_a0*ones(1,long);     %Í¨ÆøÃæ»ı(m^2)
 Vg = Ap*Lp;     %×ÔÓÉÌå»ı(m^3)
 %Ñ­»·±äÁ¿
 i = 1;
+j = 1;
 sw = 0*ones(1,long);        %½×¶ÎÑ¡Ôñ
-
+swc = 0*ones(1,100);
+bit1 = 2;
+bit2 = 4;
+bit3 = 8;
+bit4 = 16;
 
 %ÊıÖµ¼ÆËã
 %Ñ­»·Ç°³£²ÎÊı¼ÆËã
 %Ñ¹Ç¿ÏîÖĞ²ÎÊı
 p_a = rho_p*alpha_r*phi_alpha*Gamma^2*c^2;
 p_b = phi_m*Gamma^2*c*At;
-
+ep = max(max(e_a,e_b),max(e_c,e_d));
 
 %Ñ­»·¼ÆËã
-while e <= e_c
+while e <= ep
     %Áú¸ñ¿âËşÖğ²½¼ÆËã£¬¼ÆËã³öĞÂµÄÑ¹Ç¿Öµ
     %dp = p_a*(Ab(i) / Vg(i))*p(i)^n_p  - p_b*p(i) / Vg(i);
     k1 = p_a*(Ab(i) / Vg(i))*( p(i)^n_p ) - p_b*p(i) / Vg(i);
@@ -111,7 +121,7 @@ while e <= e_c
     k3 = p_a*(Ab(i) / Vg(i))*( (p(i) + dt*k2/2)^n_p ) - p_b*(p(i) + dt*k2/2) / Vg(i);
     k4 = p_a*(Ab(i) / Vg(i))*( (p(i) + dt*k3)^n_p )  - p_b*(p(i) + dt*k3) / Vg(i);
     dp = (k1 + 2*k2 + 2*k3 + k4)/6;
-    i = i + 1;
+     i = i + 1;
     p(i) = p(i - 1) + dp*dt;
 
     %²ÎÊıĞŞÕı
@@ -119,25 +129,80 @@ while e <= e_c
     rb(i) = alpha_r*p(i)^n_p;
     e(i) = e(i - 1) + rb(i)*dt;
     
-    
-    %·Ö½×¶Î¼ÆËãÈ¼ÉÕÖÜ³¤ºÍÍ¨ÆøÃæ»ı
-    if(e < e_a)
-        s(i) = 2*pi*(R + l + e(i)) + 2*pi*n_s*(r + e(i));
-        Ap(i) = 2*pi*l*(r + e(i)) + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2;
-    elseif(e < e_b)
-        as =  asin( (l*sin(pi / (2*n_s))) / (r + e(i)) );
-        s(i) = 4*n_s*(r + e(i))*as + 2*pi*(l + R + e(i));
-        Ap(i) = 2*n_s*((r + e(i))^2)*as + 2*pi*l*(r + e(i)) + pi*(R + e(i))^2 ...
-            + n_s*((r + e(i))^2)*sin(2*as) ;
+    %ÅĞ¶Ï´ËÊ±´¦ÓÚÄÄ¸ö½×¶Î
+    sw(i) = 1;
+    if(e(i) < e_a)
+        sw(i) = sw(i) + 0*bit1;
     else
-        as =  asin( (l*sin(pi / (2*n_s))) / (r + e(i)) );
-        ac1 = acos( (4*(r + e(i))^2 + 4*l^2 - D^2) / (8*l*(r + e(i))) ); 
-        ac2 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / 4*l*D ); 
-        s(i) = 2*n_s*(r + e(i))*(ac1 + 2*as - pi) + 2*pi*(l + R - r);
-        Ap(i) = pi*(D^2)/4 - pi*(R + e(i))^2 - n_s*D*(pi/2 -ac2) ...
-            *( D/2 - (r + e(i))*sin(as + pi / (2*n_s)) / sin(pi / (2*n_s))  );
+        sw(i) = sw(i) + 1*bit1;
+    end
+    if(e(i) < e_b)
+        sw(i) = sw(i) + 0*bit2;
+    else
+        sw(i) = sw(i) + 1*bit2;
+    end
+    if(e(i) < e_c)
+        sw(i) = sw(i) + 0*bit3;
+    else
+        sw(i) = sw(i) + 1*bit3;
+    end
+    if(e(i) < e_d)
+        sw(i) = sw(i) + 0*bit4;
+    else
+        sw(i) = sw(i) + 1*bit4;
+    end
+    %¼ÇÂ¼½×¶Î¸Ä±äÊ±µÄÊıÖµÎ»ÖÃ
+    if(sw(i) ~= sw(i - 1))
+        swc(j) = i;
+        j = j + 1;
     end
     
+    switch sw(i)
+        case{1}     %µÚÒ»½×¶Î
+            s(i) =  (4*pi*l*m_s) / (m_s + 1) + 2*pi*((R + e(i)) + n_s*(r + e(i)));
+            Ap(i) = (4*pi*l*m_s*(r + e(i))) / (m_s + 1) ... 
+                + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2; 
+        case{3}     %µÚ¶ş½×¶Î
+            as1 =  asin((D/2 - l) / (r + e(i)));
+            ac1 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / (4*l*D) ); 
+            s(i) = 2*n_s*(as1 + pi/2)*(r + e(i)) + 2*n_s*(trr/2)*(l + R - r);
+            Ap(i) = n_s*(trr/2)*(R + e(i))^2 + n_s*(as1 + pi/2)*(r + e(i))^2 ...  %µÚ¶ş½×¶ÎÍ¨ÆøÃæ»ı
+                + n_s*D*ac1 - n_s*l*(D/2)*sin(ac1) + 2*n_s*l*(r + e(i))*trr;
+        case{7}     %µÚÈı½×¶Î
+            as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
+            ac1 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / (4*l*D) ); 
+            ac2 = acos( (4*(r + e(i))^2 + 4*l^2 - D^2) / (8*l*(r + e(i))) ); 
+            s(i) = 2*n_s*(r + e(i))*(ac2 + 2*as2 - pi) + 2*pi*R + n_s*trr*(l - r);  %µÚÈı½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
+            Ap(i) = pi*(D^2)/4 - pi*(R + e(i))^2 - n_s*D*(pi/2 - ac1) ...%µÚÈı½×¶ÎÍ¨ÆøÃæ»ı
+                *(  D/2 - (r + e(i))*sin(as2 + trd/2) / sin(trd/2)  );
+        case{23}     %µÚËÄ½×¶Î
+            as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
+            s(i) = 2*n_s*(r + e(i))*(as2 - trd/2) + 2*pi*(R + e(i)) + 2*n_s*trr*(l - r - e(i));  %µÚËÄ½×¶ÎÈ¼ÉÕÖÜ³¤¹«Ê½
+            Ap_d = pi*(D^2)/4 - pi*(R + e(i))^2;
+        otherwise
+            s(i) = s(i - 1);
+            Ap(i) = Ap(i - 1);
+    end
+    
+    %·Ö½×¶Î¼ÆËãÈ¼ÉÕÖÜ³¤ºÍÍ¨ÆøÃæ»ı
+%     if(e < e_a)
+%         s(i) = 2*pi*(R + l + e(i)) + 2*pi*n_s*(r + e(i));
+%         Ap(i) = 2*pi*l*(r + e(i)) + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2;
+%     elseif(e < e_b)
+%         as =  asin( (l*sin(pi / (2*n_s))) / (r + e(i)) );
+%         s(i) = 4*n_s*(r + e(i))*as + 2*pi*(l + R + e(i));
+%         Ap(i) = 2*n_s*((r + e(i))^2)*as + 2*pi*l*(r + e(i)) + pi*(R + e(i))^2 ...
+%             + n_s*((r + e(i))^2)*sin(2*as) ;
+%     else
+%         as =  asin( (l*sin(pi / (2*n_s))) / (r + e(i)) );
+%         ac1 = acos( (4*(r + e(i))^2 + 4*l^2 - D^2) / (8*l*(r + e(i))) ); 
+%         ac2 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / 4*l*D ); 
+%         s(i) = 2*n_s*(r + e(i))*(ac1 + 2*as - pi) + 2*pi*(l + R - r);
+%         Ap(i) = pi*(D^2)/4 - pi*(R + e(i))^2 - n_s*D*(pi/2 -ac2) ...
+%             *( D/2 - (r + e(i))*sin(as + pi / (2*n_s)) / sin(pi / (2*n_s))  );
+%     end
+
+ 
     Ab(i) = s(i)*Lp;
     Vg(i) = Ap(i)*Lp;
     m_b(i) = rho_p*Ab(i)*rb(i);
@@ -162,6 +227,7 @@ Ab(i:1:long) = [];
 Ap(i:1:long) = [];
 Vg(i:1:long) = [];
 t = dt*n;
+sw(i:1:long) = [];
 
 %Êı¾İÊä³ö
 
