@@ -26,14 +26,14 @@ D = Dr;         %药柱外径(m)
 r = 0.003;        %微圆弧(m)
 l = 0.065;        %中心距(m)
 R = 0.01;       %中心孔(m)
-m_s = 2;        %孔药比
+m_s = 8;        %孔药比
 n_s = 4;    %药柱数量
 Lp = 0.22;      %装药长度(m)
 gamma = 1.2;        %比热比
 rho_p = 1730;       %密度(kg/m^3)
 n_p = 0.302;      %压强指数
 c = 1600;       %特征速度(m/s)
-At = 0.884785e-3;     %喷管喉部面积(m^2)
+At = 1.884785e-3;     %喷管喉部面积(m^2)
 rb_0 = 5e-3;      %?初始燃速(m/s)
 alpha_r = 1.7e-4;        %?燃速系数
 phi_alpha = 1;       %?侵蚀函数
@@ -50,7 +50,8 @@ e_b = l*sin(trd/2) - r;       %2、3阶段、两半圆相交
 e_c = (l - r - R)/2;            %4阶段、贴内圆
 e_d = sqrt( (D/2 - l*cos(trd/2))^2 + (l*sin(trd/2))^2 ) - r;    %3、4阶段、半圆贴壁
 %     e1 = ((e < e_b) & (e < e_a));
-%     e2 = ((e < e_b) & (e > e_a));
+%     e2a = ((e < e_b) & (e > e_a));
+%     e2b = ((e > e_b) & (e < e_a));
 %     e3 = ((e > e_b) & (e < e_c) & (e < e_d));
 %     e4 = ((e > e_b) & (e < e_c) & (e > e_d));
 
@@ -128,7 +129,7 @@ while e <= ep
     %逐项计算其他参数的新值
     rb(i) = alpha_r*p(i)^n_p;
     e(i) = e(i - 1) + rb(i)*dt;
-    
+
     %判断此时处于哪个阶段
     sw(i) = 1;
     if(e(i) < e_a)
@@ -159,26 +160,31 @@ while e <= ep
     
     switch sw(i)
         case{1}     %第一阶段
-            s(i) =  (4*pi*l*m_s) / (m_s + 1) + 2*pi*((R + e(i)) + n_s*(r + e(i)));
-            Ap(i) = (4*pi*l*m_s*(r + e(i))) / (m_s + 1) ... 
-                + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2; 
-        case{3}     %第二阶段
-            as1 =  asin((D/2 - l) / (r + e(i)));
-            ac1 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / (4*l*D) ); 
-            s(i) = 2*n_s*(as1 + pi/2)*(r + e(i)) + 2*n_s*(trr/2)*(l - r - e(i)) + 2*pi*(R + e(i));
-            Ap(i) = pi*(R + e(i))^2 + n_s*(as1 + pi/2)*(r + e(i))^2 ...  %第二阶段通气面积
+            s(i) =  2*n_s*trr*l + 2*pi*(n_s*(r + e(i)) + (R + e(i)));       
+            Ap(i) = 2*n_s*trr*l*(r + e(i)) + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2; 
+        case{3}     %第二A阶段
+            ac1 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / (4*l*D) );
+            ac2 = acos( (4*(r + e(i))^2 + 4*l^2 - D^2) / (8*l*(r + e(i))) ); 
+            s(i) = 2*n_s*(ac2)*(r + e(i)) + 2*n_s*(trr/2)*(l - r - e(i)) + 2*pi*(R + e(i));
+            Ap(i) = pi*(R + e(i))^2 + n_s*(ac2)*(r + e(i))^2 ...  %第二阶段通气面积
                 + n_s*((D^2) / 4)*ac1 - n_s*l*(D/2)*sin(ac1) ...
                 + (n_s/2)*trr*( (D/2)^2 - (l - r - e(i))^2 );
+        case{5}     %第二B阶段
+            as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
+            s(i) =  2*n_s*trr*l + 2*pi*(n_s*(r + e(i)) + (R + e(i))) ...
+                - (pi - 2*as2)*(r + e(i));
+            Ap(i) = 2*n_s*trr*l*(r + e(i)) + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2 ...
+                - n_s*((r  + e(i))^2)*(pi - 2*as2 - sin(2*as2)); 
         case{7}     %第三阶段
             as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
             ac1 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / (4*l*D) ); 
             ac2 = acos( (4*(r + e(i))^2 + 4*l^2 - D^2) / (8*l*(r + e(i))) ); 
             s(i) = 2*n_s*(r + e(i))*(ac2 + 2*as2 - pi) + 2*pi*(R + e(i)) ... %第三阶段燃烧周长公式
                 + n_s*trr*(l - r - e(i));
-            Ap(i) = pi*(R + e(i))^2 + n_s*(as1 + pi/2)*(r + e(i))^2 ...  %第三阶段通气面积
+            Ap(i) = pi*(R + e(i))^2 + n_s*(ac2)*(r + e(i))^2 ...  %第三阶段通气面积
                 + n_s*((D^2) / 4)*ac1 - n_s*l*(D/2)*sin(ac1) ...
                 + (n_s/2)*trr*( (D/2)^2 - (l - r - e(i))^2 ) ....
-                - 2*n_s*((r  + e(i))^2)*(pi - 2*as2 - sin(2*as2));
+                - n_s*((r  + e(i))^2)*(pi - 2*as2 - sin(2*as2));
             
         case{23}     %第四阶段
             as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
