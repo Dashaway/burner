@@ -165,21 +165,26 @@ while e <= ep
         case{3}     %第二阶段
             as1 =  asin((D/2 - l) / (r + e(i)));
             ac1 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / (4*l*D) ); 
-            s(i) = 2*n_s*(as1 + pi/2)*(r + e(i)) + 2*n_s*(trr/2)*(l + R - r);
+            s(i) = 2*n_s*(as1 + pi/2)*(r + e(i)) + 2*n_s*(trr/2)*(l - r - e(i)) + 2*pi*(R + e(i));
             Ap(i) = pi*(R + e(i))^2 + n_s*(as1 + pi/2)*(r + e(i))^2 ...  %第二阶段通气面积
-                + n_s*(D/2)*ac1 - n_s*l*(D/2)*sin(ac1) + 2*n_s*l*(r + e(i))*trr;
+                + n_s*((D^2) / 4)*ac1 - n_s*l*(D/2)*sin(ac1) ...
+                + (n_s/2)*trr*( (D/2)^2 - (l - r - e(i))^2 );
         case{7}     %第三阶段
             as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
             ac1 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / (4*l*D) ); 
             ac2 = acos( (4*(r + e(i))^2 + 4*l^2 - D^2) / (8*l*(r + e(i))) ); 
             s(i) = 2*n_s*(r + e(i))*(ac2 + 2*as2 - pi) + 2*pi*(R + e(i)) ... %第三阶段燃烧周长公式
                 + n_s*trr*(l - r - e(i));
-            Ap(i) = pi*(D^2)/4 - pi*(R + e(i))^2 - n_s*D*(pi/2 - ac1) ...%第三阶段通气面积
-                *(  D/2 - (r + e(i))*sin(as2 + trd/2) / sin(trd/2)  );
+            Ap(i) = pi*(R + e(i))^2 + n_s*(as1 + pi/2)*(r + e(i))^2 ...  %第三阶段通气面积
+                + n_s*((D^2) / 4)*ac1 - n_s*l*(D/2)*sin(ac1) ...
+                + (n_s/2)*trr*( (D/2)^2 - (l - r - e(i))^2 ) ....
+                - 2*n_s*((r  + e(i))^2)*(pi - 2*as2 - sin(2*as2));
+            
         case{23}     %第四阶段
             as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
-            s(i) = 2*n_s*(r + e(i))*(as2 - trd/2) + 2*pi*(R + e(i)) + 2*n_s*trr*(l - r - e(i));  %第四阶段燃烧周长公式
-            Ap_d = pi*(D^2)/4 - pi*(R + e(i))^2;
+            s(i) = 2*n_s*(r + e(i))*(as2 - trd/2) + 2*pi*(R + e(i)) + n_s*trr*(l - r - e(i));  %第四阶段燃烧周长公式
+            Ap(i) = pi*((D/2)^2) + pi*((R + e(i))^2) - (trr/2)*n_s*((l - r - e(i))^2) ...%第四阶段通气面积
+                - n_s*(l - r - e(i))*(r + e(i))*sin(as2 - trd/2);
         otherwise
             s(i) = s(i - 1);
             Ap(i) = Ap(i - 1);
