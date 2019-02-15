@@ -27,7 +27,7 @@ r = 0.003;        %微圆弧(m)
 l = 0.065;        %中心距(m)
 R = 0.01;       %中心孔(m)
 m_s = 8;        %孔药比
-n_s = 4;    %药柱数量
+n_s = 6;    %药柱数量
 Lp = 0.22;      %装药长度(m)
 gamma = 1.2;        %比热比
 rho_p = 1730;       %密度(kg/m^3)
@@ -49,11 +49,13 @@ e_a = D/2 - r - l;              %1、2阶段、贴外壁
 e_b = l*sin(trd/2) - r;       %2、3阶段、两半圆相交
 e_c = (l - r - R)/2;            %4阶段、贴内圆
 e_d = sqrt( (D/2 - l*cos(trd/2))^2 + (l*sin(trd/2))^2 ) - r;    %3、4阶段、半圆贴壁
+e_e = ( l^2 + R^2 - r^2 - 2*l*R*cos(trd/2) ) / ( 2*(l*cos(trd/2) + r - R) );    %余药阶段
 %     e1 = ((e < e_b) & (e < e_a));
 %     e2a = ((e < e_b) & (e > e_a));
 %     e2b = ((e > e_b) & (e < e_a));
 %     e3 = ((e > e_b) & (e < e_c) & (e < e_d));
 %     e4 = ((e > e_b) & (e < e_c) & (e > e_d));
+%     e5 = ((e > e_c) & (e > e_d) & (e < e_e));
 
 %计算中间值
 %     as1 =  asin((D/2 - l) / (r + e));
@@ -105,13 +107,14 @@ bit1 = 2;
 bit2 = 4;
 bit3 = 8;
 bit4 = 16;
+bit5 = 32;
 
 %数值计算
 %循环前常参数计算
 %压强项中参数
 p_a = rho_p*alpha_r*phi_alpha*Gamma^2*c^2;
 p_b = phi_m*Gamma^2*c*At;
-ep = max(max(e_a,e_b),max(e_c,e_d));
+ep = max(max( max(e_a,e_b),max(e_c,e_d) ),e_e);
 
 %循环计算
 while e <= ep
@@ -152,6 +155,11 @@ while e <= ep
     else
         sw(i) = sw(i) + 1*bit4;
     end
+    if(e(i) < e_e)
+        sw(i) = sw(i) + 0*bit5;
+    else
+        sw(i) = sw(i) + 1*bit5;
+    end
     %记录阶段改变时的数值位置
     if(sw(i) ~= sw(i - 1))
         swc(j) = i;
@@ -185,12 +193,18 @@ while e <= ep
                 + n_s*((D^2) / 4)*ac1 - n_s*l*(D/2)*sin(ac1) ...
                 + (n_s/2)*trr*( (D/2)^2 - (l - r - e(i))^2 ) ....
                 - n_s*((r  + e(i))^2)*(pi - 2*as2 - sin(2*as2));
-            
         case{23}     %第四阶段
             as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
             s(i) = 2*n_s*(r + e(i))*(as2 - trd/2) + 2*pi*(R + e(i)) + n_s*trr*(l - r - e(i));  %第四阶段燃烧周长公式
             Ap(i) = pi*((D/2)^2) + pi*((R + e(i))^2) - (trr/2)*n_s*((l - r - e(i))^2) ...%第四阶段通气面积
                 - n_s*(l - r - e(i))*(r + e(i))*sin(as2 - trd/2);
+        case{31}     %第五阶段
+            as2 =  asin( (l*sin(trd/2)) / (r + e(i)) );
+            ac3 = acos( (l^2 + (r + e(i))^2 - (R + e(i))^2) / (2*l*(r +e (i))) );
+            ac4 = acos( (l^2 + (R + e(i))^2 - (r + e(i))^2) / (2*l*(R +e (i))) );
+            s(i) = 2*n_s*(r + e(i))*(as2 - trd/2 - ac3) ...
+                    + 2*n_s*(R + e(i))*(trd/2 - ac4);  %第四阶段燃烧周长公式
+            Ap(i) = pi*((D/2)^2);
         otherwise
             s(i) = s(i - 1);
             Ap(i) = Ap(i - 1);
