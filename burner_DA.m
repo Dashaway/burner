@@ -63,13 +63,13 @@ e_d = (l - r - R)/2;            %弧贴内圆
 e_e = ( l^2 + R^2 - r^2 - 2*l*R*cos(trd/2) ) / ( 2*(l*cos(trd/2) + r - R) );    %弧半圆贴内圆
 %各阶段对应条件
 %     第一阶段
-%     e1 = ((e <= e_b) & (e <= e_a));
+%     e1 = ((e <= e_a) & (e <= e_b));
 %     sw = 1;
 %     第二A阶段
-%     e2a = ((e <= e_b) & (e > e_a));
+%     e2a = ((e > e_a) & (e < e_b));
 %     sw = 3;
-%     第二A阶段
-%     e2b = ((e > e_b) & (e <= e_a));
+%     第二B阶段
+%     e2b = ((e <= e_a) & (e > e_b));
 %     sw = 5;
 %     第三阶段
 %     e3 = ((e > e_b) & (e <= e_c) & (e <= e_d));
@@ -85,17 +85,37 @@ ep = max(max( max(e_a,e_b),max(e_c,e_d) ),e_e);
 
 
 %变量
-%计算用变量（已赋初值）
+%计算用变量数组（已赋初值）
 p = p0*ones(1,long);        %实际压强(Pa)
 rb = rb_0*ones(1,long);     %燃速(m/s)
 e = 0*ones(1,long);     %已烧去肉厚(m)
 s = s_a0*ones(1,long);     %燃烧面实际边长(m)
 m_b = rho_p*s_a0*Lp*rb_0*ones(1,long);     %燃气生成率(kg/s)
 m_p = (phi_m*p0*At / c)*ones(1,long);     %质量流率(kg/s)
-F = 2000*(p0*At / c)*ones(1,long);     %推力(?)
+F = 2000*(p0*At / c)*ones(1,long);     %推力(N)
 Ab = s_a0*Lp*ones(1,long);     %燃烧面积(m^2)
 Ap = Ap_a0*ones(1,long);     %通气面积(m^2)
 Vg = Ap*Lp;     %自由体积(m^3)
+%最大值变量
+p_max = p0;        %最大压强(Pa)
+e_max = 0;     %最大已烧去肉厚(m)
+s_max = s_a0;     %燃烧面最大周长(m)
+m_b_max = rho_p*s_a0*Lp*rb_0;     %最大燃气生成率(kg/s)
+m_p_max = (phi_m*p0*At / c);     %最大质量流率(kg/s)
+F_max = 2000*(p0*At / c);     %最大推力(?)
+Ab_max = s_a0*Lp;     %最大燃烧面积(m^2)
+Ap_max = Ap_a0;     %最大通气面积(m^2)
+Vg_max = Ap_max*Lp;     %最大自由体积(m^3)
+%最小值变量
+p_min = p0;        %最小压强(Pa)
+e_min = 0;     %最小已烧去肉厚(m)
+s_min = s_a0;     %燃烧面最小周长(m)
+m_b_min = rho_p*s_a0*Lp*rb_0;     %最小燃气生成率(kg/s)
+m_p_min = (phi_m*p0*At / c);     %最小质量流率(kg/s)
+F_min = 2000*(p0*At / c);     %最小推力(?)
+Ab_min = s_a0*Lp;     %最小燃烧面积(m^2)
+Ap_min = Ap_a0;     %最小通气面积(m^2)
+Vg_min = Ap_min*Lp;     %最小自由体积(m^3)
 %循环变量
 i = 1;
 j = 1;
@@ -240,9 +260,62 @@ while (e(i) <= ep)
     F(i) = 2000*m_p(i) + 4.4*At*(p(i)-p0);
     
     %记录最大值
-%     if(p(i) > p_max)
-%         p_max = p(i);
-%     end
+    if(p(i) > p_max)
+        p_max = p(i);
+    end
+    if(e(i) > e_max)
+        e_max = e(i);
+    end
+    if(s(i) > s_max)
+        s_max = s(i);
+    end
+    if(m_b(i) > m_b_max)
+        m_b_max = m_b(i);
+    end
+    if(m_p(i) > m_p_max)
+        m_p_max = m_p(i);
+    end
+    if(F(i) > F_max)
+        F_max = F(i);
+    end
+    if(Ab(i) > Ab_max)
+        Ab_max = Ab(i);
+    end
+    if(Ap(i) > Ap_max)
+        Ap_max = Ap(i);
+    end
+    if(Vg(i) > Vg_max)
+        Vg_max = Vg(i);
+    end
+    
+    %记录最小值
+    if(p(i) < p_min)
+        p_min = p(i);
+    end
+    if(e(i) < e_min)
+        e_min = e(i);
+    end
+    if(s(i) < s_min)
+        s_min = s(i);
+    end
+    if(m_b(i) < m_b_min)
+        m_b_min = m_b(i);
+    end
+    if(m_p(i) < m_p_min)
+        m_p_min = m_p(i);
+    end
+    if(F(i) < F_min)
+        F_min = F(i);
+    end
+    if(Ab(i) < Ab_min)
+        Ab_min = Ab(i);
+    end
+    if(Ap(i) < Ap_min)
+        Ap_min = Ap(i);
+    end
+    if(Vg(i) < Vg_min)
+        Vg_min = Vg(i);
+    end
     
     %数组长度约束
     if i >= long
@@ -266,56 +339,100 @@ Ap(i:1:long) = [];
 Vg(i:1:long) = [];
 sw(i:1:long) = [];
 t = dt*n;
+t_max = dt*(i - 1);     %燃烧总时间
+prx = 1.05;
+pri = -0.05;
 
+str = [' t_max = ',num2str(t_max)];
+disp(str);
 
 %数据输出
-%生成图像
+%写入文档
+
+
+%绘制图像
 figure;
 hold on;
 subplot(2,1,1);
 plot(t,p);
-grid on,axis tight ;
-title('燃烧室压力')
+axis ([pri*t_max,prx*t_max,(pri*(p_max - p_min) + p_min), ...
+    (prx*(p_max - p_min) + p_min)]);
+title('燃烧室压力');
+xlabel('时间(s)');
+ylabel('压强(Pa)');
+% legend('算例1');
 
 subplot(2,1,2);
 plot(t,e);
-grid on,axis tight ;
-title('烧去肉厚')
+axis ([pri*t_max,prx*t_max,(pri*(e_max - e_min) + e_min), ...
+    (prx*(e_max - e_min) + e_min)]);
+title('烧去肉厚');
+xlabel('时间(s)');
+ylabel('长度(m)');
+% legend('算例1');
 
 figure;
 hold on;
 subplot(2,1,1);
 plot(t,Ab);
-grid on,axis tight ;
-title('燃烧面积')
+axis ([pri*t_max,prx*t_max,(pri*(Ab_max - Ab_min) + Ab_min), ...
+    (prx*(Ab_max - Ab_min) + Ab_min)]);
+title('燃烧面积');
+xlabel('时间(s)');
+ylabel('面积(m^2)');
+% legend('算例1');
+
 
 subplot(2,1,2);
 plot(t,Ap);
-grid on,axis tight ;
-title('通气面积')
+axis ([pri*t_max,prx*t_max,(pri*(Ap_max - Ap_min) + Ap_min), ...
+    (prx*(Ap_max - Ap_min) + Ap_min)]);
+title('通气面积');
+xlabel('时间(s)');
+ylabel('面积(m^2)');
+% legend('算例1');
 
 figure;
 hold on;
 subplot(2,1,1);
 plot(t,m_b);
-grid on,axis tight ;
-title('燃气生成率')
+axis ([pri*t_max,prx*t_max,(pri*(m_b_max - m_b_min) + m_b_min), ...
+    (prx*(m_b_max - m_b_min) + m_b_min)]);
+title('燃气生成率');
+xlabel('时间(s)');
+ylabel('质量流率(kg/s)');
+% legend('算例1');
 
 subplot(2,1,2);
 plot(t,m_p);
-grid on,axis tight ;
-title('质量流率')
+axis ([pri*t_max,prx*t_max,(pri*(m_p_max - m_p_min) + m_p_min), ...
+    (prx*(m_p_max - m_p_min) + m_p_min)]);
+title('质量流率');
+xlabel('时间(s)');
+ylabel('质量流率(kg/s)');
+% legend('算例1');
 
 figure;
 hold on;
 plot(t,F);
-grid on,axis tight ;
-title('推力')
+axis ([pri*t_max,prx*t_max,(pri*(F_max - F_min) + F_min), ...
+    (prx*(F_max - F_min) + F_min)]);
+title('推力');
+xlabel('时间(s)');
+ylabel('力(N)');
+legend('算例1');
 
 figure;
 hold on;
 plot(t,p);
-grid on,axis tight ;
-title('燃烧室压力')
+axis ([pri*t_max,prx*t_max,(pri*(p_max - p_min) + p_min), ...
+    (prx*(p_max - p_min) + p_min)]);
+title('燃烧室压力');
+xlabel('时间(s)');
+ylabel('压强(Pa)');
+legend('算例1');
+text(swc(2)*dt,p(swc(2)),['(',num2str(swc(2)*dt),',',num2str(p(swc(2))),')'],'color','g');
+text(swc(3)*dt,p(swc(3)),['(',num2str(swc(3)*dt),',',num2str(p(swc(3))),')'],'color','b');
+text(swc(4)*dt,p(swc(4)),['(',num2str(swc(4)*dt),',',num2str(p(swc(4))),')'],'color','r');
 
 %结束
