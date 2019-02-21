@@ -30,7 +30,7 @@ r = 0.003;        %微圆弧半径(m)
 l = 0.065;        %弧心距(m)
 R = 0.01;       %中心孔(m)
 m_s = 8;        %弧孔药比
-n_s = 6;        %弧数量
+n_s = 4;        %弧数量
 Lp = 0.22;      %药柱长度(m)
 %已知常量
 p0 = 1.02e5;    %初始压强(Pa)
@@ -131,8 +131,7 @@ swc = 0*ones(1,100);        %阶段变化点
 %各阶段燃烧周长
 %     s1 =  2*n_s*trr*l + 2*pi*(n_s*(r + e) + (R + e));
 %     s2a = 2*n_s*ac2*(r + e) + 2*n_s*(trr/2)*(l - r - e) + 2*pi*(R + e);
-%     s2b =  2*n_s*trr*l + 2*pi*(n_s*(r + e) + (R + e)) ...
-%         - (pi - 2*as1)*(r + e);
+%     s2b =  2*n_s*trr*l + 2*pi*(R + e) + 4*n_s*as1*(r + e);
 %     s3 = 2*n_s*(r + e)*(ac2 + 2*as1 - pi) + 2*pi*(R + e) + n_s*trr*(l - r - e);
 %     s4 = 2*n_s*(r + e)*(as1 - trd/2) + 2*pi*(R + e) + n_s*trr*(l - r - e);
 %     s5 = 2*n_s*(r + e)*(as1 - trd/2 - ac3) + 2*n_s*(R + e)*(trd/2 - ac4);  
@@ -141,14 +140,14 @@ swc = 0*ones(1,100);        %阶段变化点
 %     Ap2a = pi*(R + e)^2 + n_s*ac2*(r + e)^2 ...  
 %         + n_s*(((D/2)^2)*ac1 - n_s*l*(D/2)*sin(ac1) ...
 %         + (n_s/2)*trr*( (D/2)^2 - (l - r - e)^2 );
-%     Ap2b = 2*n_s*trr*l*(r + e) + n_s*pi*(r + e)^2 + pi*(R + e)^2;
-%         - n_s*((r + e)^2)*(pi - 2*as2 - sin(2*as2));
+%     Ap2b = 2*n_s*trr*l*(r + e) + pi*(R + e)^2 ...
+%         + n_s*((r + e)^2)*(2*as1 + sin(2*as1));
 %     Ap3 = pi*(R + e)^2 + n_s*ac2*(r + e)^2 ...  
 %         + n_s*((D/2)^2)*ac1 - n_s*l*(D/2)*sin(ac1) ...
 %         + (n_s/2)*trr*( (D/2)^2 - (l - r - e)^2 ) ....
 %         - n_s*((r + e)^2)*(pi - 2*as1 - sin(2*as1));
 %     Ap4 = pi*((D/2)^2) + pi*(R + e)^2 - (trr/2)*n_s*((l - r - e)^2);
-%         - n_s*(l - r - e)*(r + e)*sin(as1 - trd/2);
+%         - n_s*l*(r + e)*sin(as1 - trd/2) + n_s*((r + e)^2)*(as1 - trd/2);
 %     Ap5 = pi*((D/2)^2);
 %龙格库塔计算公式
 %     dp = p_a*(Ab / Vg)*p^n_p  - p_b*p / Vg;
@@ -223,10 +222,9 @@ while (e(i) <= ep)
                 + (n_s/2)*trr*( (D/2)^2 - (l - r - e(i))^2 );
         case{5}     %第二B阶段
             as1 =  asin( (l*sin(trd/2)) / (r + e(i)) );
-            s(i) =  2*n_s*trr*l + 2*pi*(n_s*(r + e(i)) + (R + e(i))) ...
-                - (pi - 2*as1)*(r + e(i));
-            Ap(i) = 2*n_s*trr*l*(r + e(i)) + n_s*pi*(r + e(i))^2 + pi*(R + e(i))^2 ...
-                - n_s*((r  + e(i))^2)*(pi - 2*as1 - sin(2*as1));
+            s(i) =  2*n_s*trr*l + 2*pi*(R + e(i)) + 4*n_s*as1*(r + e(i));
+            Ap(i) = 2*n_s*trr*l*(r + e(i))  + pi*(R + e(i))^2 ...
+                + n_s*((r + e(i))^2)*(2*as1 + sin(2*as1));
         case{7}     %第三阶段
             as1 =  asin( (l*sin(trd/2)) / (r + e(i)) );
             ac1 = acos( (4*l^2 + D^2 - 4*(r + e(i))^2) / (4*l*D) );
@@ -241,7 +239,7 @@ while (e(i) <= ep)
             as1 =  asin( (l*sin(trd/2)) / (r + e(i)) );
             s(i) = 2*n_s*(r + e(i))*(as1 - trd/2) + 2*pi*(R + e(i)) + n_s*trr*(l - r - e(i));
             Ap(i) = pi*((D/2)^2) + pi*((R + e(i))^2) - (trr/2)*n_s*((l - r - e(i))^2) ...
-                - n_s*(l - r - e(i))*(r + e(i))*sin(as1 - trd/2);
+                - n_s*l*(r + e(i))*sin(as1 - trd/2) + n_s*((r + e(i))^2)*(as1 - trd/2);
         case{31}     %第五阶段
             as1 =  asin( (l*sin(trd/2)) / (r + e(i)) );
             ac3 = acos( (l^2 + (r + e(i))^2 - (R + e(i))^2) / (2*l*(r + e(i))) );
@@ -360,7 +358,7 @@ axis ([pri*t_max,prx*t_max,(pri*(p_max - p_min) + p_min), ...
 title('燃烧室压力');
 xlabel('时间(s)');
 ylabel('压强(Pa)');
-% legend('算例1');
+% legend('算例2');
 
 subplot(2,1,2);
 plot(t,e);
@@ -369,7 +367,7 @@ axis ([pri*t_max,prx*t_max,(pri*(e_max - e_min) + e_min), ...
 title('烧去肉厚');
 xlabel('时间(s)');
 ylabel('长度(m)');
-% legend('算例1');
+% legend('算例2');
 
 figure;
 hold on;
@@ -380,7 +378,7 @@ axis ([pri*t_max,prx*t_max,(pri*(Ab_max - Ab_min) + Ab_min), ...
 title('燃烧面积');
 xlabel('时间(s)');
 ylabel('面积(m^2)');
-% legend('算例1');
+% legend('算例2');
 
 
 subplot(2,1,2);
@@ -390,7 +388,7 @@ axis ([pri*t_max,prx*t_max,(pri*(Ap_max - Ap_min) + Ap_min), ...
 title('通气面积');
 xlabel('时间(s)');
 ylabel('面积(m^2)');
-% legend('算例1');
+% legend('算例2');
 
 figure;
 hold on;
@@ -401,7 +399,7 @@ axis ([pri*t_max,prx*t_max,(pri*(m_b_max - m_b_min) + m_b_min), ...
 title('燃气生成率');
 xlabel('时间(s)');
 ylabel('质量流率(kg/s)');
-% legend('算例1');
+% legend('算例2');
 
 subplot(2,1,2);
 plot(t,m_p);
@@ -410,7 +408,7 @@ axis ([pri*t_max,prx*t_max,(pri*(m_p_max - m_p_min) + m_p_min), ...
 title('质量流率');
 xlabel('时间(s)');
 ylabel('质量流率(kg/s)');
-% legend('算例1');
+% legend('算例2');
 
 figure;
 hold on;
@@ -420,7 +418,7 @@ axis ([pri*t_max,prx*t_max,(pri*(F_max - F_min) + F_min), ...
 title('推力');
 xlabel('时间(s)');
 ylabel('力(N)');
-legend('算例1');
+legend('算例2');
 
 figure;
 hold on;
@@ -430,9 +428,9 @@ axis ([pri*t_max,prx*t_max,(pri*(p_max - p_min) + p_min), ...
 title('燃烧室压力');
 xlabel('时间(s)');
 ylabel('压强(Pa)');
-legend('算例1');
-text(swc(2)*dt,p(swc(2)),['(',num2str(swc(2)*dt),',',num2str(p(swc(2))),')'],'color','g');
-text(swc(3)*dt,p(swc(3)),['(',num2str(swc(3)*dt),',',num2str(p(swc(3))),')'],'color','b');
-text(swc(4)*dt,p(swc(4)),['(',num2str(swc(4)*dt),',',num2str(p(swc(4))),')'],'color','r');
+legend('算例2');
+% text(swc(2)*dt,p(swc(2)),['(',num2str(swc(2)*dt),',',num2str(p(swc(2))),')'],'color','g');
+% text(swc(3)*dt,p(swc(3)),['(',num2str(swc(3)*dt),',',num2str(p(swc(3))),')'],'color','b');
+% text(swc(4)*dt,p(swc(4)),['(',num2str(swc(4)*dt),',',num2str(p(swc(4))),')'],'color','r');
 
 %结束
