@@ -433,4 +433,23 @@ legend('算例2');
 % text(swc(3)*dt,p(swc(3)),['(',num2str(swc(3)*dt),',',num2str(p(swc(3))),')'],'color','b');
 % text(swc(4)*dt,p(swc(4)),['(',num2str(swc(4)*dt),',',num2str(p(swc(4))),')'],'color','r');
 
+
+figure;
+hold on;
+%AX(1)和 AX(2)分别是左右 axes 的句柄，可以用 set()函数处理
+[AX,H1,H2] = plotyy(t,p,t,F); 
+set(AX,'Xlim',[pri*t_max,prx*t_max]);
+xlabel('压强与推力');
+set(AX(:),'Ycolor','k');
+
+set(get(AX(1),'Ylabel'),'string','压强(Pa)','color','k','linewidth',1.0); 
+set(get(AX(2),'Ylabel'),'string','力(N)','color','k','linewidth',1.0); 
+set(AX(1),'Ylim',[-0.5e6,1e7]);
+% set(AX(1),'Ylim',[-0.5e6,1e7],'yTick',[-0.5e6,1e6,1e7]);
+set(AX(2),'Ylim',[-0.5e4,8e4]);
+set(H1,'LineStyle','-.','color','k','linewidth',1.0);
+set(H2,'LineStyle','-','color','k','linewidth',1.0);
+legend('压强','推力');
+
+
 %结束
