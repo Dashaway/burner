@@ -2,12 +2,13 @@
 %Dashaway
 %燃烧参数计算
 
-%190213
-%更改圆弧角度
 
 %190219
 %整理公式
 %完善注释
+
+%190311
+%加入双Y轴图像
 
 
 clear;
@@ -444,9 +445,9 @@ set(AX(:),'Ycolor','k');
 
 set(get(AX(1),'Ylabel'),'string','压强(Pa)','color','k','linewidth',1.0); 
 set(get(AX(2),'Ylabel'),'string','力(N)','color','k','linewidth',1.0); 
-set(AX(1),'Ylim',[-0.5e6,1e7]);
-% set(AX(1),'Ylim',[-0.5e6,1e7],'yTick',[-0.5e6,1e6,1e7]);
-set(AX(2),'Ylim',[-0.5e4,8e4]);
+set(AX(1),'Ylim',[-0.5e6,1e7],'yTick',0:1e6:1e7);
+set(AX(2),'Ylim',[-0.5e4,8e4],'yTick',0:1e4:8e4);
+box off;
 set(H1,'LineStyle','-.','color','k','linewidth',1.0);
 set(H2,'LineStyle','-','color','k','linewidth',1.0);
 legend('压强','推力');
