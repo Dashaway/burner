@@ -435,22 +435,30 @@ legend('算例2');
 % text(swc(4)*dt,p(swc(4)),['(',num2str(swc(4)*dt),',',num2str(p(swc(4))),')'],'color','r');
 
 
-figure;
+%双Y轴图像
+%打开图，设置左右y轴属性
+left_color = [0 0 0];
+right_color = [0 0 0];
+set(figure,'defaultAxesColorOrder',[left_color;right_color]);
 hold on;
-%AX(1)和 AX(2)分别是左右 axes 的句柄，可以用 set()函数处理
-[AX,H1,H2] = plotyy(t,p,t,F); 
-set(AX,'Xlim',[pri*t_max,prx*t_max]);
-xlabel('压强与推力');
-set(AX(:),'Ycolor','k');
-
-set(get(AX(1),'Ylabel'),'string','压强(Pa)','color','k','linewidth',1.0); 
-set(get(AX(2),'Ylabel'),'string','力(N)','color','k','linewidth',1.0); 
-set(AX(1),'Ylim',[-0.5e6,1e7],'yTick',0:1e6:1e7);
-set(AX(2),'Ylim',[-0.5e4,8e4],'yTick',0:1e4:8e4);
-box off;
-set(H1,'LineStyle','-.','color','k','linewidth',1.0);
-set(H2,'LineStyle','-','color','k','linewidth',1.0);
-legend('压强','推力');
+%激活左侧
+yyaxis left;
+plot(t,p,'-','LineWidth',1,'color','k');   
+ylabel('压强(Pa)')
+%设置刻度
+axis([pri*t_max,prx*t_max,-0.5e6,1e7]);
+set(gca,'YTick',0:1e6:1e7);
+%激活右侧
+yyaxis right;
+plot(t,F,'-.','LineWidth',1,'color','k');
+ylabel('力(N)');
+%设置刻度
+axis([pri*t_max,prx*t_max,-0.5e4,8e4]);
+set(gca,'YTick',0:1e4:8e4);
+%设置X轴和标题
+xlabel('时间(s)');
+title('压强与推力');
+legend('压强', '推力');
 
 
 %结束
