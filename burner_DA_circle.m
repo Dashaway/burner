@@ -10,48 +10,51 @@
 clear;
 close all;
 %初始值设定
+
+
 %常量
-%辅助常量
+
+%计算辅助常量
 long = 100000;        %数组长度
 n = 1:1:long;       %绘图横坐标
-dt = 5e-5;      %步进值
-%已知常量
-p0 = 1.02e5;    %初始压强(Pa)
-Dr = 0.132;       %燃烧室外径(m)
-D = 0.0265;         %药柱初始外径(m)
-d = 0.0125;       %药柱初始内径(m)
-ep = (D - d)/2;     %总肉厚(m)
+dt = 2e-5;      %步进值
+%燃烧室参数
+Dr = 0.150;       %燃烧室外径(m)
+At = 1.884785e-3;     %喷管喉部面积(m^2)
+%装药参数
+D = 0.150;         %药柱初始外径(m)
+d = 0.01;       %药柱初始内径(m)
 n_s = 17;    %药柱数量
 Lp = 0.22;      %装药长度(m)
+%已知常量
+p0 = 1.02e5;    %初始压强(Pa)
 gamma = 1.2;        %比热比
 rho_p = 1730;       %密度(kg/m^3)
 n_p = 0.302;      %压强指数
 c = 1600;       %特征速度(m/s)
-At = 1.884785e-3;     %喷管喉部面积(m^2)
-r0 = 5e-3;      %?初始燃速(m/s)
+rb_0 = 5e-3;      %?初始燃速(m/s)
 alpha_r = 1.7e-4;        %?燃速系数
 phi_alpha = 1;       %?侵蚀函数
 phi_m = 1;      %?
 
 %计算得常量
-
 Gamma = ( (2 / (gamma + 1))^( (gamma + 1) / (2*(gamma - 1)) ) ) ...
     *sqrt(gamma);      %比热比函数
-%周长参数
-s0 = n_s*pi*d;      %燃烧面初始边长
-    %s =  n_s*pi*(d + e);
-%通气面积参数
-Ap0 = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*d^2 / 4;
-    %Ap = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*(d + e)^2 / 4;
+s0 = n_s*pi*d;      %燃烧面初始周长
+Ap0 = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*d^2 / 4;        %初始通气面积
 
+%约束条件
+
+%程序结束条件
+ep = (D - d)/2;     %总肉厚(m)
 
 %变量
 %计算用变量（已赋初值）
 p = p0*ones(1,long);        %实际压强(Pa)
-r = r0*ones(1,long);     %燃速(m/s)
+r = rb_0*ones(1,long);     %燃速(m/s)
 e = 0*ones(1,long);     %已烧去肉厚(m)
 s = s0*ones(1,long);     %燃烧面实际边长(m)
-m_b = rho_p*s0*Lp*r0*ones(1,long);     %燃气生成率(kg/s)
+m_b = rho_p*s0*Lp*rb_0*ones(1,long);     %燃气生成率(kg/s)
 m_p = (phi_m*p0*At / c)*ones(1,long);     %质量流率(kg/s)
 F = 2000*(p0*At / c)*ones(1,long);     %推力(?)
 Ab = s0*Lp*ones(1,long);     %燃烧面积(m^2)
@@ -60,6 +63,12 @@ Vg = Ap*Lp;     %自由体积(m^3)
 %循环变量
 i = 1;
 
+%燃烧周长
+%s =  n_s*pi*(d + e);
+%各阶段通气面积
+%Ap = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*(d + e)^2 / 4;
+%龙格库塔计算公式
+%     dp = p_a*(Ab / Vg)*p^n_p  - p_b*p / Vg;
 
 %数值计算
 %循环前常参数计算
@@ -69,9 +78,9 @@ p_b = phi_m*Gamma^2*c*At;
 
 
 %循环计算
-while e <= ep
+while (e(i) <= ep)
     %龙格库塔逐步计算，计算出新的压强值
-    %dp = p_a*(Ab(i) / Vg(i))*p(i)^n_p  - p_b*p(i) / Vg(i);
+    %dp = p_a*(Ab / Vg)*p^n_p  - p_b*p / Vg;
     k1 = p_a*(Ab(i) / Vg(i))*( p(i)^n_p ) - p_b*p(i) / Vg(i);
     k2 = p_a*(Ab(i) / Vg(i))*( (p(i) + dt*k1/2)^n_p ) - p_b*(p(i) + dt*k1/2) / Vg(i);
     k3 = p_a*(Ab(i) / Vg(i))*( (p(i) + dt*k2/2)^n_p ) - p_b*(p(i) + dt*k2/2) / Vg(i);

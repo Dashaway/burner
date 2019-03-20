@@ -95,7 +95,7 @@ e_a = r1_s;
 e_b = l_s*(sin(epsilon_s*beta_s)) / cos(theta_s) - r_s;
 
 %循环计算
-while e <= ep
+while (e(i) <= ep)
     %龙格库塔逐步计算，计算出新的压强值
     %dp = p_a*(Ab(i) / Vg(i))*p(i)^n_p  - p_b*p(i) / Vg(i);
     k1 = p_a*(Ab(i) / Vg(i))*( p(i)^n_p ) - p_b*p(i) / Vg(i);

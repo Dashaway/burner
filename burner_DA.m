@@ -169,7 +169,7 @@ while (e(i) <= ep)
     k3 = p_a*(Ab(i) / Vg(i))*( (p(i) + dt*k2/2)^n_p ) - p_b*(p(i) + dt*k2/2) / Vg(i);
     k4 = p_a*(Ab(i) / Vg(i))*( (p(i) + dt*k3)^n_p )  - p_b*(p(i) + dt*k3) / Vg(i);
     dp = (k1 + 2*k2 + 2*k3 + k4)/6;
-     i = i + 1;
+    i = i + 1;
     p(i) = p(i - 1) + dp*dt;
 
     %²ÎÊýÐÞÕý
