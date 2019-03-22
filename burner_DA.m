@@ -7,8 +7,8 @@
 %整理公式
 %完善注释
 
-%190320
-%重整理星孔装药
+%190321
+%分段燃烧
 
 
 clear;
@@ -27,15 +27,24 @@ Dr = 0.132;       %燃烧室外径(m)
 % At = 1.884785e-3;     %喷管喉部面积(m^2)
 At = 5e-4;     %喷管喉部面积(m^2)
 %装药参数
-D = 0.132;       %外径(m)
-ep = 0.04;     %总肉厚(m)
+%星孔装药参数
+Ds = 0.132;       %外径(m)
+ep_s = 0.04;     %肉厚(m)
 r_s = 0.003;        %星尖圆弧半径(m)
 r1_s = 0.003;        %星根过渡圆弧半径(m)
 l_s = 0.023;        %特征长度(m)
 n_s = 7;        %星角数
 epsilon_s = 1;      %角分数
 theta_s = 0.620465;      %星根半角(rad)
+%圆柱装药参数
+Dc = 0.132;     %外径(m)
+rc = 0.05;      %内径(m)
+ep_c = (Dc - rc) / 2;       %肉厚(m)
+%分段参数
 Lp = 0.22;      %药柱长度(m)
+pers = 0.5;     %星孔段占比
+Lp_s = Lp*pers;     %星孔段长度
+Lp_c = Lp - Lp_s;       %圆柱段长度
 %已知常量
 p0 = 1.02e5;    %初始压强(Pa)
 gamma = 1.2;        %比热比
@@ -53,6 +62,7 @@ Gamma = ( (2 / (gamma + 1))^( (gamma + 1) / (2*(gamma - 1)) ) ) ...
 beta_s = pi / n_s;        %等分角(rad)
 
 %计算中间值
+%星孔装药
 %燃烧周长项中参数
 s_a = (sin(epsilon_s*beta_s)) / sin(theta_s) + (1 - epsilon_s)*beta_s;
 s_b = (pi / 2 + beta_s - theta_s - cot(theta_s));
@@ -72,11 +82,15 @@ p_a = rho_p*alpha_r*phi_alpha*Gamma^2*c^2;
 p_b = phi_m*Gamma^2*c*At;
 
 %初始参数
+%星孔装药
 %周长参数
-s_a0 = 2*n_s*(l_s*s_a + (r_s + r1_s)*s_b  - beta_s*r1_s);      %燃烧面初始边长
+s_s_a0 = 2*n_s*(l_s*s_a + (r_s + r1_s)*s_b  - beta_s*r1_s);      
 %通气面积参数
-Api0 = Ap_a + l_s*r_s*Ap_b + ((r_s^2) / 2)*Ap_c + ((r1_s^2) / 2)*Ap_d;
-Ap_a0 = 2*n_s*Api0;
+Ap_si0 = Ap_a + l_s*r_s*Ap_b + ((r_s^2) / 2)*Ap_c + ((r1_s^2) / 2)*Ap_d;
+Ap_s_a0 = 2*n_s*Ap_si0;
+%圆柱装药
+s_c_0 = 2*pi*rc;
+Ap_c_0 = pi*(rc^2);
 
 
 %约束条件
@@ -87,16 +101,29 @@ e_a = r1_s;     %星根半角消失
 e_b = l_s*(sin(epsilon_s*beta_s)) / cos(theta_s) - r_s;     %星边消失
 
 %各阶段对应条件
-%     第一阶段
-%     e1 = ((e <= e_a) & (e <= e_b) & (e <= ep));
+%     星孔第一阶段，圆柱第一阶段
+%     e11 = ((e <= e_a) & (e <= e_b) & (e <= ep_s) & (e <= ep_c));
 %     sw = 1;
-%     第二阶段
-%     e2 = ((e > e_a) & (e < e_b) & (e <= ep));
+%     星孔第二阶段，圆柱第一阶段
+%     e21 = ((e > e_a) & (e < e_b) & (e <= ep_s) & (e <= ep_c));
 %     sw = 3;
-%     第三阶段
-%     e3 = ((e > e_a) & (e > e_b) & (e <= ep));
+%     星孔第三阶段，圆柱第一阶段
+%     e31 = ((e > e_a) & (e > e_b) & (e <= ep_s) & (e <= ep_c));
 %     sw = 7;
+%     星孔结束，圆柱第一阶段
+%     e41 = ((e > e_a) & (e > e_b) & (e > ep_s) & (e <= ep_c));
+%     sw = 15;
+%     星孔第一阶段，圆柱结束
+%     e12 = ((e <= e_a) & (e <= e_b) & (e <= ep_s) & (e > ep_c));
+%     sw = 17;
+%     星孔第二阶段，圆柱结束
+%     e22 = ((e > e_a) & (e < e_b) & (e <= ep_s) & (e > ep_c));
+%     sw = 19;
+%     星孔第三阶段，圆柱结束
+%     e32 = ((e > e_a) & (e > e_b) & (e <= ep_s) & (e > ep_c));
+%     sw = 23;
 %程序结束条件
+ep = max(ep_s,ep_c);
 %     e >= ep;
 
 
@@ -105,12 +132,14 @@ e_b = l_s*(sin(epsilon_s*beta_s)) / cos(theta_s) - r_s;     %星边消失
 p = p0*ones(1,long);        %实际压强(Pa)
 rb = rb_0*ones(1,long);     %燃速(m/s)
 e = 0*ones(1,long);     %已烧去肉厚(m)
-s = s_a0*ones(1,long);     %燃烧面实际边长(m)
+s_s = s_s_a0*ones(1,long);     %星孔燃烧面实际边长(m)
+s_c = s_c_0*ones(1,long);     %圆柱燃烧面实际边长(m)
 m_b = rho_p*s_a0*Lp*rb_0*ones(1,long);     %燃气生成率(kg/s)
 m_p = (phi_m*p0*At / c)*ones(1,long);     %质量流率(kg/s)
 F = 2000*(p0*At / c)*ones(1,long);     %推力(N)
 Ab = s_a0*Lp*ones(1,long);     %燃烧面积(m^2)
-Ap = Ap_a0*ones(1,long);     %通气面积(m^2)
+Ap_s = Ap_s_a0*ones(1,long);     %星孔通气面积(m^2)
+Ap_c = Ap_c_0*ones(1,long);     %圆柱通气面积(m^2)
 Vg = Ap*Lp;     %自由体积(m^3)
 %最大值变量
 p_max = p0;        %最大压强(Pa)
@@ -139,11 +168,7 @@ sw = 0*ones(1,long);        %阶段选择
 swc = 0*ones(1,100);        %阶段变化点
 
 %计算中间值
-%     as1 =  asin( (l*sin(trd/2)) / (r + e) );
-%     ac1 = acos( (4*l^2 + D^2 - 4*(r + e)^2) / (4*l*D) ); 
-%     ac2 = acos( (4*(r + e)^2 + 4*l^2 - D^2) / (8*l*(r + e)) ); 
-%     ac3 = acos( (l^2 + (r + e)^2 - (R + e)^2) / (2*l*(r + e)) );
-%     ac4 = acos( (l^2 + (R + e)^2 - (r + e)^2) / (2*l*(R + e)) );
+
 %各阶段燃烧周长
 %     si1 = l_s*s_a + (r_s + r1_s)*s_b - beta_s*(r1_s - e);
 %     si2 = l_s*s_a + (r_s + e)*s_b;
@@ -195,6 +220,16 @@ while (e(i) <= ep)
     else
         sw(i) = sw(i) + 1*4;
     end
+    if(e(i) <= ep_s)
+        sw(i) = sw(i) + 0*8;
+    else
+        sw(i) = sw(i) + 1*8;
+    end
+    if(e(i) <= ep_c)
+        sw(i) = sw(i) + 0*16;
+    else
+        sw(i) = sw(i) + 1*16;
+    end
     %记录阶段改变时的循环数值
     if(sw(i) ~= sw(i - 1))
         swc(j) = i;
@@ -202,16 +237,37 @@ while (e(i) <= ep)
     end
     %分阶段计算燃烧周长和通气面积
     switch sw(i)
-        case{1}     %第一阶段
+        case{1}     %星孔第一阶段，圆柱第一阶段
             s(i) = 2*n_s*(l_s*s_a + (r_s + r1_s)*s_b - beta_s*(r1_s - e(i)));
             Api1 = Ap_a + l_s*(r_s + e(i))*Ap_b + (((r_s + e(i))^2) / 2)*Ap_c ...
                 + (((r1_s - e(i))^2) / 2)*Ap_d;
             Ap(i) = 2*n_s*Api1;
-        case{3}     %第二阶段
+        case{3}     %星孔第二阶段，圆柱第一阶段
             s(i) = 2*n_s*(l_s*s_a + (r_s + e(i))*s_b);
             Api2 = Ap_a + l_s*(r_s + e(i))*Ap_b + (((r_s + e(i))^2) / 2)*Ap_c;
             Ap(i) = 2*n_s*Api2;
-        case{7}     %第三阶段
+        case{7}     %星孔第三阶段，圆柱第一阶段
+            s(i) = 2*n_s*(l_s*s_c + (r_s + e(i))*( beta_s + asin(s_d / (r_s + e(i))) ) );
+            Api3 = ( ((l_s + r_s + e(i))^2)*Ap_e ...
+                + ((r_s + e(i))^2)*(Ap_g + asin(Ap_f / (r_s + e(i)))) ...
+                + Ap_f*(sqrt((r_s + e(i))^2 - Ap_f^2)  + l_s*cos(Ap_g)) ) / 2;
+            Ap(i) = 2*n_s*Api3;
+        case{15}     %星孔结束，圆柱第一阶段
+            s(i) = 2*n_s*(l_s*s_c + (r_s + e(i))*( beta_s + asin(s_d / (r_s + e(i))) ) );
+            Api3 = ( ((l_s + r_s + e(i))^2)*Ap_e ...
+                + ((r_s + e(i))^2)*(Ap_g + asin(Ap_f / (r_s + e(i)))) ...
+                + Ap_f*(sqrt((r_s + e(i))^2 - Ap_f^2)  + l_s*cos(Ap_g)) ) / 2;
+            Ap(i) = 2*n_s*Api3;
+        case{17}     %星孔第一阶段，圆柱结束
+            s(i) = 2*n_s*(l_s*s_a + (r_s + r1_s)*s_b - beta_s*(r1_s - e(i)));
+            Api1 = Ap_a + l_s*(r_s + e(i))*Ap_b + (((r_s + e(i))^2) / 2)*Ap_c ...
+                + (((r1_s - e(i))^2) / 2)*Ap_d;
+            Ap(i) = 2*n_s*Api1;
+        case{19}     %星孔第二阶段，圆柱结束
+            s(i) = 2*n_s*(l_s*s_a + (r_s + e(i))*s_b);
+            Api2 = Ap_a + l_s*(r_s + e(i))*Ap_b + (((r_s + e(i))^2) / 2)*Ap_c;
+            Ap(i) = 2*n_s*Api2;
+        case{23}     %星孔第三阶段，圆柱结束
             s(i) = 2*n_s*(l_s*s_c + (r_s + e(i))*( beta_s + asin(s_d / (r_s + e(i))) ) );
             Api3 = ( ((l_s + r_s + e(i))^2)*Ap_e ...
                 + ((r_s + e(i))^2)*(Ap_g + asin(Ap_f / (r_s + e(i)))) ...
@@ -312,7 +368,7 @@ t_max = dt*(i - 1);     %燃烧总时间
 prx = 1.05;
 pri = -0.05;
 
-str = [' t_max = ',num2str(t_max)];
+str = [' 燃烧总时间： ',num2str(t_max),'s'];
 disp(str);
 
 %数据输出
