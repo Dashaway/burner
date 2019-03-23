@@ -64,9 +64,9 @@ Vg = Ap*Lp;     %自由体积(m^3)
 i = 1;
 
 %燃烧周长
-%s =  n_s*pi*(d + e);
+%s =  n_s*pi*(d + 2*e);
 %各阶段通气面积
-%Ap = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*(d + e)^2 / 4;
+%Ap = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*(d + 2*e)^2 / 4;
 %龙格库塔计算公式
 %     dp = p_a*(Ab / Vg)*p^n_p  - p_b*p / Vg;
 
@@ -94,8 +94,8 @@ while (e(i) <= ep)
     r(i) = alpha_r*p(i)^n_p;
     e(i) = e(i - 1) + r(i)*dt;
     
-    s(i) = n_s*pi*(d + e(i));
-    Ap(i) = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*(d + e(i))^2 / 4;
+    s(i) = n_s*pi*(d + 2*e(i));
+    Ap(i) = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*(d + 2*e(i))^2 / 4;
     Ab(i) = s(i)*Lp;
     Vg(i) = Ap(i)*Lp;
     m_b(i) = rho_p*Ab(i)*r(i);

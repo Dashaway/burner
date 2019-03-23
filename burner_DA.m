@@ -19,7 +19,7 @@ close all;
 %常量
 
 %计算辅助常量
-long = 100000;        %数组长度
+long = 150000;        %数组长度
 n = 1:1:long;       %绘图横坐标
 dt = 2e-5;      %步进值
 %燃烧室参数
@@ -38,8 +38,8 @@ epsilon_s = 1;      %角分数
 theta_s = 0.620465;      %星根半角(rad)
 %圆柱装药参数
 Dc = 0.132;     %外径(m)
-rc = 0.05;      %内径(m)
-ep_c = (Dc - rc) / 2;       %肉厚(m)
+dc = 0.09;      %内径(m)
+ep_c = (Dc - dc) / 2;       %肉厚(m)
 %分段参数
 Lp = 0.22;      %药柱长度(m)
 pers = 0.5;     %星孔段占比
@@ -64,19 +64,19 @@ beta_s = pi / n_s;        %等分角(rad)
 %计算中间值
 %星孔装药
 %燃烧周长项中参数
-s_a = (sin(epsilon_s*beta_s)) / sin(theta_s) + (1 - epsilon_s)*beta_s;
-s_b = (pi / 2 + beta_s - theta_s - cot(theta_s));
-s_c = (1 - epsilon_s)*beta_s;
-s_d =  (l_s*sin(epsilon_s*beta_s));
+s_sa = (sin(epsilon_s*beta_s)) / sin(theta_s) + (1 - epsilon_s)*beta_s;
+s_sb = (pi / 2 + beta_s - theta_s - cot(theta_s));
+s_sc = (1 - epsilon_s)*beta_s;
+s_sd =  (l_s*sin(epsilon_s*beta_s));
 %通气面积项中参数
-Ap_a = ((l_s^2) / 2)*( (1 - epsilon_s)*beta_s + (sin(epsilon_s*beta_s)) ...
+Ap_sa = ((l_s^2) / 2)*( (1 - epsilon_s)*beta_s + (sin(epsilon_s*beta_s)) ...
     *( (cos(epsilon_s*beta_s)) - (sin(epsilon_s*beta_s))*cot(theta_s) ) );
-Ap_b = s_a;
-Ap_c = s_b;
-Ap_d = cot(theta_s) + theta_s - pi / 2;
-Ap_e = s_c;
-Ap_f = s_d;
-Ap_g = epsilon_s*beta_s;
+Ap_sb = s_sa;
+Ap_sc = s_sb;
+Ap_sd = cot(theta_s) + theta_s - pi / 2;
+Ap_se = s_sc;
+Ap_sf = s_sd;
+Ap_sg = epsilon_s*beta_s;
 %压强项中参数
 p_a = rho_p*alpha_r*phi_alpha*Gamma^2*c^2;
 p_b = phi_m*Gamma^2*c*At;
@@ -84,13 +84,13 @@ p_b = phi_m*Gamma^2*c*At;
 %初始参数
 %星孔装药
 %周长参数
-s_s_a0 = 2*n_s*(l_s*s_a + (r_s + r1_s)*s_b  - beta_s*r1_s);      
+s_s_0 = 2*n_s*(l_s*s_sa + (r_s + r1_s)*s_sb  - beta_s*r1_s);      
 %通气面积参数
-Ap_si0 = Ap_a + l_s*r_s*Ap_b + ((r_s^2) / 2)*Ap_c + ((r1_s^2) / 2)*Ap_d;
-Ap_s_a0 = 2*n_s*Ap_si0;
+Ap_si0 = Ap_sa + l_s*r_s*Ap_sb + ((r_s^2) / 2)*Ap_sc + ((r1_s^2) / 2)*Ap_sd;
+Ap_s_0 = 2*n_s*Ap_si0;
 %圆柱装药
-s_c_0 = 2*pi*rc;
-Ap_c_0 = pi*(rc^2);
+s_c_0 = pi*dc;
+Ap_c_0 = pi*(dc^2) / 4;
 
 
 %约束条件
@@ -132,35 +132,39 @@ ep = max(ep_s,ep_c);
 p = p0*ones(1,long);        %实际压强(Pa)
 rb = rb_0*ones(1,long);     %燃速(m/s)
 e = 0*ones(1,long);     %已烧去肉厚(m)
-s_s = s_s_a0*ones(1,long);     %星孔燃烧面实际边长(m)
+s_s = s_s_0*ones(1,long);     %星孔燃烧面实际边长(m)
 s_c = s_c_0*ones(1,long);     %圆柱燃烧面实际边长(m)
-m_b = rho_p*s_a0*Lp*rb_0*ones(1,long);     %燃气生成率(kg/s)
+m_b = rho_p*(s_s_0*Lp_s + s_c_0*Lp_c)*rb_0*ones(1,long);     %燃气生成率(kg/s)
 m_p = (phi_m*p0*At / c)*ones(1,long);     %质量流率(kg/s)
 F = 2000*(p0*At / c)*ones(1,long);     %推力(N)
-Ab = s_a0*Lp*ones(1,long);     %燃烧面积(m^2)
-Ap_s = Ap_s_a0*ones(1,long);     %星孔通气面积(m^2)
+Ab = (s_s_0*Lp_s + s_c_0*Lp_c)*ones(1,long);     %燃烧面积(m^2)
+Ap_s = Ap_s_0*ones(1,long);     %星孔通气面积(m^2)
 Ap_c = Ap_c_0*ones(1,long);     %圆柱通气面积(m^2)
-Vg = Ap*Lp;     %自由体积(m^3)
+Vg = (Ap_s*Lp_s + Ap_c*Lp_c);     %自由体积(m^3)
 %最大值变量
 p_max = p0;        %最大压强(Pa)
 e_max = 0;     %最大已烧去肉厚(m)
-s_max = s_a0;     %燃烧面最大周长(m)
-m_b_max = rho_p*s_a0*Lp*rb_0;     %最大燃气生成率(kg/s)
+s_s_max = s_s_0;     %星孔燃烧面最大周长(m)
+s_c_max = s_c_0;     %圆柱燃烧面最大周长(m)
+m_b_max = rho_p*(s_s_0*Lp_s + s_c_0*Lp_c)*rb_0;     %最大燃气生成率(kg/s)
 m_p_max = (phi_m*p0*At / c);     %最大质量流率(kg/s)
-F_max = 2000*(p0*At / c);     %最大推力(?)
-Ab_max = s_a0*Lp;     %最大燃烧面积(m^2)
-Ap_max = Ap_a0;     %最大通气面积(m^2)
-Vg_max = Ap_max*Lp;     %最大自由体积(m^3)
+F_max = 2000*(p0*At / c);     %最大推力(N)
+Ab_max = (s_s_0*Lp_s + s_c_0*Lp_c);     %最大燃烧面积(m^2)
+Ap_s_max = Ap_s_0;     %星孔最大通气面积(m^2)
+Ap_c_max = Ap_c_0;     %圆柱最大通气面积(m^2)
+Vg_max = (Ap_s*Lp_s + Ap_c*Lp_c);     %最大自由体积(m^3)
 %最小值变量
 p_min = p0;        %最小压强(Pa)
 e_min = 0;     %最小已烧去肉厚(m)
-s_min = s_a0;     %燃烧面最小周长(m)
-m_b_min = rho_p*s_a0*Lp*rb_0;     %最小燃气生成率(kg/s)
+s_s_min = s_s_0;     %燃烧面最小周长(m)
+s_c_min = s_c_0;     %燃烧面最小周长(m)
+m_b_min = rho_p*(s_s_0*Lp_s + s_c_0*Lp_c)*rb_0;     %最小燃气生成率(kg/s)
 m_p_min = (phi_m*p0*At / c);     %最小质量流率(kg/s)
-F_min = 2000*(p0*At / c);     %最小推力(?)
-Ab_min = s_a0*Lp;     %最小燃烧面积(m^2)
-Ap_min = Ap_a0;     %最小通气面积(m^2)
-Vg_min = Ap_min*Lp;     %最小自由体积(m^3)
+F_min = 2000*(p0*At / c);     %最小推力(N)
+Ab_min = (s_s_0*Lp_s + s_c_0*Lp_c);     %最小燃烧面积(m^2)
+Ap_s_min = Ap_s_0;     %星孔最小通气面积(m^2)
+Ap_c_min = Ap_c_0;     %圆柱最小通气面积(m^2)
+Vg_min = (Ap_s*Lp_s + Ap_c*Lp_c);     %最小自由体积(m^3)
 %循环变量
 i = 1;
 j = 1;
@@ -170,18 +174,18 @@ swc = 0*ones(1,100);        %阶段变化点
 %计算中间值
 
 %各阶段燃烧周长
-%     si1 = l_s*s_a + (r_s + r1_s)*s_b - beta_s*(r1_s - e);
-%     si2 = l_s*s_a + (r_s + e)*s_b;
-%     si3 = l_s*s_c + (r_s + e)*( beta_s + asin(s_d / (r_s + e)) );
-%     s = 2*n_s*si;
+%     ssi1 = l_s*s_sa + (r_s + r1_s)*s_sb - beta_s*(r1_s - e);
+%     ssi2 = l_s*s_sa + (r_s + e)*s_sb;
+%     ssi3 = l_s*s_sc + (r_s + e)*( beta_s + asin(s_sd / (r_s + e)) );
+%     s_s = 2*n_s*ssi;
 %各阶段通气面积
-%     Api1 = Ap_a + l_s*(r_s + e)*Ap_b + (((r_s + e)^2) / 2)*Ap_c ...
-%        + (((r1_s - e)^2) / 2)*Ap_d;
-%     Api2 = Ap_a + l_s*(r_s + e)*Ap_b + (((r_s + e)^2) / 2)*Ap_c;
-%     Api3 = ( ((l_s + r_s + e)^2)*Ap_e ...
-%        + ((r_s + e)^2)*(Ap_g + asin(Ap_f / (r_s + e))) ...
-%        + Ap_f*(sqrt((r_s + e)^2 - Ap_f^2)  + l_s*cos(Ap_g)) ) / 2;
-%     Ap = 2*n_s*Api;
+%     Apsi1 = Ap_sa + l_s*(r_s + e)*Ap_sb + (((r_s + e)^2) / 2)*Ap_sc ...
+%        + (((r1_s - e)^2) / 2)*Ap_sd;
+%     Apsi2 = Ap_sa + l_s*(r_s + e)*Ap_sb + (((r_s + e)^2) / 2)*Ap_sc;
+%     Apsi3 = ( ((l_s + r_s + e)^2)*Ap_se ...
+%        + ((r_s + e)^2)*(Ap_sg + asin(Ap_sf / (r_s + e))) ...
+%        + Ap_sf*(sqrt((r_s + e)^2 - Ap_sf^2)  + l_s*cos(Ap_sg)) ) / 2;
+%     Ap_s = 2*n_s*Apsi;
 
 %龙格库塔计算公式
 %     dp = p_a*(Ab / Vg)*p^n_p  - p_b*p / Vg;
@@ -238,48 +242,61 @@ while (e(i) <= ep)
     %分阶段计算燃烧周长和通气面积
     switch sw(i)
         case{1}     %星孔第一阶段，圆柱第一阶段
-            s(i) = 2*n_s*(l_s*s_a + (r_s + r1_s)*s_b - beta_s*(r1_s - e(i)));
-            Api1 = Ap_a + l_s*(r_s + e(i))*Ap_b + (((r_s + e(i))^2) / 2)*Ap_c ...
-                + (((r1_s - e(i))^2) / 2)*Ap_d;
-            Ap(i) = 2*n_s*Api1;
+            s_s(i) = 2*n_s*(l_s*s_sa + (r_s + r1_s)*s_sb - beta_s*(r1_s - e(i)));
+            Apsi1 = Ap_sa + l_s*(r_s + e(i))*Ap_sb + (((r_s + e(i))^2) / 2)*Ap_sc ...
+                + (((r1_s - e(i))^2) / 2)*Ap_sd;
+            Ap_s(i) = 2*n_s*Apsi1;
+            s_c(i) = pi*(dc + 2*e(i));
+            Ap_c(i) = pi*(dc + 2*e(i))^2 / 4;
         case{3}     %星孔第二阶段，圆柱第一阶段
-            s(i) = 2*n_s*(l_s*s_a + (r_s + e(i))*s_b);
-            Api2 = Ap_a + l_s*(r_s + e(i))*Ap_b + (((r_s + e(i))^2) / 2)*Ap_c;
-            Ap(i) = 2*n_s*Api2;
+            s_s(i) = 2*n_s*(l_s*s_sa + (r_s + e(i))*s_sb);
+            Apsi2 = Ap_sa + l_s*(r_s + e(i))*Ap_sb + (((r_s + e(i))^2) / 2)*Ap_sc;
+            Ap_s(i) = 2*n_s*Apsi2;
+            s_c(i) = pi*(dc + 2*e(i));
+            Ap_c(i) = pi*(dc + 2*e(i))^2 / 4;
         case{7}     %星孔第三阶段，圆柱第一阶段
-            s(i) = 2*n_s*(l_s*s_c + (r_s + e(i))*( beta_s + asin(s_d / (r_s + e(i))) ) );
-            Api3 = ( ((l_s + r_s + e(i))^2)*Ap_e ...
-                + ((r_s + e(i))^2)*(Ap_g + asin(Ap_f / (r_s + e(i)))) ...
-                + Ap_f*(sqrt((r_s + e(i))^2 - Ap_f^2)  + l_s*cos(Ap_g)) ) / 2;
-            Ap(i) = 2*n_s*Api3;
+            s_s(i) = 2*n_s*(l_s*s_sc + (r_s + e(i))*( beta_s + asin(s_sd / (r_s + e(i))) ) );
+            Apsi3 = ( ((l_s + r_s + e(i))^2)*Ap_se ...
+                + ((r_s + e(i))^2)*(Ap_sg + asin(Ap_sf / (r_s + e(i)))) ...
+                + Ap_sf*(sqrt((r_s + e(i))^2 - Ap_sf^2)  + l_s*cos(Ap_sg)) ) / 2;
+            Ap_s(i) = 2*n_s*Apsi3;
+            s_c(i) = pi*(dc + 2*e(i));
+            Ap_c(i) = pi*(dc + 2*e(i))^2 / 4;
         case{15}     %星孔结束，圆柱第一阶段
-            s(i) = 2*n_s*(l_s*s_c + (r_s + e(i))*( beta_s + asin(s_d / (r_s + e(i))) ) );
-            Api3 = ( ((l_s + r_s + e(i))^2)*Ap_e ...
-                + ((r_s + e(i))^2)*(Ap_g + asin(Ap_f / (r_s + e(i)))) ...
-                + Ap_f*(sqrt((r_s + e(i))^2 - Ap_f^2)  + l_s*cos(Ap_g)) ) / 2;
-            Ap(i) = 2*n_s*Api3;
+            s_s(i) = 0;
+            Ap_s(i) = pi*Dr^2 / 4;
+            s_c(i) = pi*(dc + 2*e(i));
+            Ap_c(i) = pi*(dc + 2*e(i))^2 / 4;
         case{17}     %星孔第一阶段，圆柱结束
-            s(i) = 2*n_s*(l_s*s_a + (r_s + r1_s)*s_b - beta_s*(r1_s - e(i)));
-            Api1 = Ap_a + l_s*(r_s + e(i))*Ap_b + (((r_s + e(i))^2) / 2)*Ap_c ...
-                + (((r1_s - e(i))^2) / 2)*Ap_d;
-            Ap(i) = 2*n_s*Api1;
+            s_s(i) = 2*n_s*(l_s*s_sa + (r_s + r1_s)*s_sb - beta_s*(r1_s - e(i)));
+            Apsi1 = Ap_sa + l_s*(r_s + e(i))*Ap_sb + (((r_s + e(i))^2) / 2)*Ap_sc ...
+                + (((r1_s - e(i))^2) / 2)*Ap_sd;
+            Ap_s(i) = 2*n_s*Apsi1;
+            s_c(i) = 0;
+            Ap_c(i) = pi*Dr^2 / 4;
         case{19}     %星孔第二阶段，圆柱结束
-            s(i) = 2*n_s*(l_s*s_a + (r_s + e(i))*s_b);
-            Api2 = Ap_a + l_s*(r_s + e(i))*Ap_b + (((r_s + e(i))^2) / 2)*Ap_c;
-            Ap(i) = 2*n_s*Api2;
+            s_s(i) = 2*n_s*(l_s*s_sa + (r_s + e(i))*s_sb);
+            Apsi2 = Ap_sa + l_s*(r_s + e(i))*Ap_sb + (((r_s + e(i))^2) / 2)*Ap_sc;
+            Ap_s(i) = 2*n_s*Apsi2;
+            s_c(i) = 0;
+            Ap_c(i) = pi*Dr^2 / 4;
         case{23}     %星孔第三阶段，圆柱结束
-            s(i) = 2*n_s*(l_s*s_c + (r_s + e(i))*( beta_s + asin(s_d / (r_s + e(i))) ) );
-            Api3 = ( ((l_s + r_s + e(i))^2)*Ap_e ...
-                + ((r_s + e(i))^2)*(Ap_g + asin(Ap_f / (r_s + e(i)))) ...
-                + Ap_f*(sqrt((r_s + e(i))^2 - Ap_f^2)  + l_s*cos(Ap_g)) ) / 2;
-            Ap(i) = 2*n_s*Api3;
+            s_s(i) = 2*n_s*(l_s*s_sc + (r_s + e(i))*( beta_s + asin(s_sd / (r_s + e(i))) ) );
+            Apsi3 = ( ((l_s + r_s + e(i))^2)*Ap_se ...
+                + ((r_s + e(i))^2)*(Ap_sg + asin(Ap_sf / (r_s + e(i)))) ...
+                + Ap_sf*(sqrt((r_s + e(i))^2 - Ap_sf^2)  + l_s*cos(Ap_sg)) ) / 2;
+            Ap_s(i) = 2*n_s*Apsi3;
+            s_c(i) = 0;
+            Ap_c(i) = pi*Dr^2 / 4;
         otherwise     %其它阶段
-            s(i) = s(i - 1);
-            Ap(i) = Ap(i - 1);
+            s_s(i) = s_s(i - 1);
+            Ap_s(i) = Ap_s(i - 1);
+            s_c(i) = s_c(i - 1);
+            Ap_c(i) = Ap_c(i - 1);
     end
     %计算其他参数
-    Ab(i) = s(i)*Lp;
-    Vg(i) = Ap(i)*Lp;
+    Ab(i) = s_s(i)*Lp_s + s_c(i)*Lp_c;
+    Vg(i) = Ap_s(i)*Lp_s + Ap_c(i)*Lp_c;
     m_b(i) = rho_p*Ab(i)*rb(i);
     m_p(i) = phi_m*p(i)*At / c;
     F(i) = 2000*m_p(i) + 4.4*At*(p(i)-p0);
@@ -291,8 +308,11 @@ while (e(i) <= ep)
     if(e(i) > e_max)
         e_max = e(i);
     end
-    if(s(i) > s_max)
-        s_max = s(i);
+    if(s_s(i) > s_s_max)
+        s_s_max = s_s(i);
+    end
+    if(s_c(i) > s_c_max)
+        s_c_max = s_c(i);
     end
     if(m_b(i) > m_b_max)
         m_b_max = m_b(i);
@@ -306,8 +326,11 @@ while (e(i) <= ep)
     if(Ab(i) > Ab_max)
         Ab_max = Ab(i);
     end
-    if(Ap(i) > Ap_max)
-        Ap_max = Ap(i);
+    if(Ap_s(i) > Ap_s_max)
+        Ap_s_max = Ap_s(i);
+    end
+    if(Ap_c(i) > Ap_c_max)
+        Ap_c_max = Ap_c(i);
     end
     if(Vg(i) > Vg_max)
         Vg_max = Vg(i);
@@ -320,8 +343,11 @@ while (e(i) <= ep)
     if(e(i) < e_min)
         e_min = e(i);
     end
-    if(s(i) < s_min)
-        s_min = s(i);
+    if(s_s(i) < s_s_min)
+        s_s_min = s_s(i);
+    end
+    if(s_c(i) < s_c_min)
+        s_c_min = s_c(i);
     end
     if(m_b(i) < m_b_min)
         m_b_min = m_b(i);
@@ -335,8 +361,11 @@ while (e(i) <= ep)
     if(Ab(i) < Ab_min)
         Ab_min = Ab(i);
     end
-    if(Ap(i) < Ap_min)
-        Ap_min = Ap(i);
+    if(Ap_s(i) < Ap_s_min)
+        Ap_s_min = Ap_s(i);
+    end
+    if(Ap_c(i) < Ap_c_min)
+        Ap_c_min = Ap_c(i);
     end
     if(Vg(i) < Vg_min)
         Vg_min = Vg(i);
@@ -355,12 +384,14 @@ n(i:1:long) = [];
 p(i:1:long) = [];
 rb(i:1:long) = [];
 e(i:1:long) = [];
-s(i:1:long) = [];
+s_s(i:1:long) = [];
+s_c(i:1:long) = [];
 m_b(i:1:long) = [];
 m_p(i:1:long) = [];
 F(i:1:long) = [];
 Ab(i:1:long) = [];
-Ap(i:1:long) = [];
+Ap_s(i:1:long) = [];
+Ap_c(i:1:long) = [];
 Vg(i:1:long) = [];
 sw(i:1:long) = [];
 t = dt*n;
@@ -408,11 +439,18 @@ ylabel('面积(m^2)');
 % legend('算例2');
 
 
-subplot(2,1,2);
-plot(t,Ap);
-axis ([pri*t_max,prx*t_max,(pri*(Ap_max - Ap_min) + Ap_min), ...
-    (prx*(Ap_max - Ap_min) + Ap_min)]);
-title('通气面积');
+subplot(2,2,3);
+plot(t,Ap_s);
+axis ([pri*t_max,prx*t_max,(pri*(Ap_s_max - Ap_s_min) + Ap_s_min), ...
+    (prx*(Ap_s_max - Ap_s_min) + Ap_s_min)]);
+title('星孔通气面积');
+xlabel('时间(s)');
+ylabel('面积(m^2)');
+subplot(2,2,4);
+plot(t,Ap_c);
+axis ([pri*t_max,prx*t_max,(pri*(Ap_c_max - Ap_c_min) + Ap_c_min), ...
+    (prx*(Ap_c_max - Ap_c_min) + Ap_c_min)]);
+title('圆柱通气面积');
 xlabel('时间(s)');
 ylabel('面积(m^2)');
 % legend('算例2');
