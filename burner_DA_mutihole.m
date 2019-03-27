@@ -120,8 +120,8 @@ Vg_min = Ap_min*Lp;     %最小自由体积(m^3)
 %循环变量
 i = 1;
 j = 1;
-sw = 0*ones(1,long);        %阶段选择
-swc = 0*ones(1,100);        %阶段变化点
+sw = zeros(1,long);        %阶段选择
+swc = zeros(2,100);        %阶段变化点
 
 %计算中间值
 %     as1 =  asin( (l*sin(trd/2)) / (r + e) );
@@ -206,7 +206,8 @@ while (e(i) <= ep)
     end
     %记录阶段改变时的循环数值
     if(sw(i) ~= sw(i - 1))
-        swc(j) = i;
+        swc(1,j) = i;
+        swc(2,j) = sw(i);
         j = j + 1;
     end
     %分阶段计算燃烧周长和通气面积
@@ -337,6 +338,7 @@ Ab(i:1:long) = [];
 Ap(i:1:long) = [];
 Vg(i:1:long) = [];
 sw(i:1:long) = [];
+swc(:,j:100) = [];
 t = dt*n;
 t_max = dt*(i - 1);     %燃烧总时间
 prx = 1.05;
