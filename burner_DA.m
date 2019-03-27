@@ -3,11 +3,8 @@
 %燃烧参数计算
 
 
-%190321
-%分段燃烧
-
-%190326
-%内外层不同装药
+%190327
+%轮式装药
 
 
 clear;
@@ -22,29 +19,28 @@ long = 150000;        %数组长度
 n = 1:1:long;       %绘图横坐标
 dt = 5e-5;      %步进值
 %燃烧室参数
-Dr = 0.132;       %燃烧室外径(m)
+Dr = 0.240;       %燃烧室外径(m)
 % At = 1.884785e-3;     %喷管喉部面积(m^2)
-At = 1.884785e-3;     %喷管喉部面积(m^2)
+At = 7.853982e-5;     %喷管喉部面积(m^2)
 %装药参数
-%内外圆柱装药参数
-Dc = 0.132;     %外径(m)
-dm = 0.082;     %中径(m)
-dc = 0.01;      %内径(m)
-ep_m = (dm - dc) / 2;       %内肉厚(m)
-ep_c = (Dc - dc) / 2;       %总肉厚(m)
-Lp = 0.22;      %药柱长度(m)
-%内推进剂参数
-n_p1 = 0.4;      %压强指数
-rho_p1 = 1700;       %密度(kg/m^3)
-c1 = 1584;       %特征速度(m/s)
-rb1_0 = 9e-3;      %?初始燃速(m/s)
-alpha_r1 = 9e-5;        %?燃速系数
-%外推进剂参数
-n_p2 = 0.302;      %压强指数
-rho_p2 = 1730;       %密度(kg/m^3)
-c2 = 1600;       %特征速度(m/s)
-rb2_0 = 5e-3;      %?初始燃速(m/s)
-alpha_r2 = 1.7e-4;        %?燃速系数
+%轮式装药参数
+Dc = 0.238;     %外径(m)
+dc = 0.0868;      %内径(m)
+ep_1 = 0.0155;       %厚肉厚(m)
+ep_2 = 0.0033;       %薄肉厚(m)
+n_s = 12;       %轮孔数
+l_s1 = 0.0995;      %内圆弧特征长度(m)
+l_s2 = 0.053;       %外圆弧特征长度(m)
+r_s1 = 0.004;       %上过渡圆弧半径(m)
+r_s2 = 0.003;       %下过渡圆弧半径(m)
+Lp = 0.345;      %药柱长度(m)
+%推进剂参数
+n_p = 0.35;      %压强指数
+rho_p = 1787;       %密度(kg/m^3)
+c = 1550;       %特征速度(m/s)
+rb_0 = 1.003e-2;      %?初始燃速(m/s)
+alpha_r = 2.23e-2;        %?燃速系数(m/s*MPa)
+
 %已知常量
 p0 = 1.02e5;    %初始压强(Pa)
 gamma = 1.2;        %比热比
@@ -54,14 +50,14 @@ phi_m = 1;      %?
 %计算得常量
 Gamma = ( (2 / (gamma + 1))^( (gamma + 1) / (2*(gamma - 1)) ) ) ...
     *sqrt(gamma);      %比热比函数
+beta_s = 2*pi / n_s;    %轮孔角(rad)
 
 %计算中间值
 
 %压强项中参数
-p_a1 = rho_p1*alpha_r1*phi_alpha*Gamma^2*c1^2;
-p_b1 = phi_m*Gamma^2*c1*At;
-p_a2 = rho_p2*alpha_r2*phi_alpha*Gamma^2*c2^2;
-p_b2 = phi_m*Gamma^2*c2*At;
+p_a = rho_p*alpha_r*phi_alpha*Gamma^2*c^2;
+p_b = phi_m*Gamma^2*c*At;
+
 
 %初始参数
 %圆柱装药
@@ -71,10 +67,7 @@ s_0 = pi*dc;
 Ap_0 = pi*(dc^2) / 4;
 
 %压强项
-p_a = p_a1;
-p_b = p_b1;
-n_p = n_p1;
-alpha_r = alpha_r1;
+
 
 %约束条件
 %参数约束条件
@@ -84,25 +77,25 @@ alpha_r = alpha_r1;
 
 %各阶段对应条件
 %     星孔第一阶段，圆柱第一阶段
-%     e1 = ((e <= ep_m) & (e <= ep_c));
+%     e1 = ((e <= ep_1) & (e <= ep_2));
 %     sw = 1;
 %     星孔第二阶段，圆柱第一阶段
-%     e2 = ((e > ep_m) & (e <= ep_c));
+%     e2 = ((e > ep_1) & (e <= ep_2));
 %     sw = 3;
 %程序结束条件
-ep = ep_c;
+ep = ep_2;
 %     e >= ep;
 
 
 %变量
 %计算用变量数组（已赋初值）
 p = p0*ones(1,long);        %实际压强(Pa)
-rb = rb1_0*ones(1,long);     %燃速(m/s)
+rb = rb_0*ones(1,long);     %燃速(m/s)
 e = 0*ones(1,long);     %已烧去肉厚(m)
 s = s_0*ones(1,long);     %燃烧面实际周长(m)
-m_b = rho_p1*s_0*Lp*rb1_0*ones(1,long);     %燃气生成率(kg/s)
-m_p = (phi_m*p0*At / c1)*ones(1,long);     %质量流率(kg/s)
-F = 2000*(p0*At / c1)*ones(1,long);     %推力(N)
+m_b = rho_p*s_0*Lp*rb_0*ones(1,long);     %燃气生成率(kg/s)
+m_p = (phi_m*p0*At / c)*ones(1,long);     %质量流率(kg/s)
+F = 2000*(p0*At / c)*ones(1,long);     %推力(N)
 Ab = s_0*Lp*ones(1,long);     %燃烧面积(m^2)
 Ap = Ap_0*ones(1,long);     %通气面积(m^2)
 Vg = Ap*Lp;     %自由体积(m^3)
@@ -110,9 +103,9 @@ Vg = Ap*Lp;     %自由体积(m^3)
 p_max = p0;        %最大压强(Pa)
 e_max = 0;     %最大已烧去肉厚(m)
 s_max = s_0;     %燃烧面最大周长(m)
-m_b_max = rho_p1*s_0*Lp*rb1_0;     %最大燃气生成率(kg/s)
-m_p_max = (phi_m*p0*At / c1);     %最大质量流率(kg/s)
-F_max = 2000*(p0*At / c1);     %最大推力(N)
+m_b_max = rho_p*s_0*Lp*rb_0;     %最大燃气生成率(kg/s)
+m_p_max = (phi_m*p0*At / c);     %最大质量流率(kg/s)
+F_max = 2000*(p0*At / c);     %最大推力(N)
 Ab_max = s_0*Lp;     %最大燃烧面积(m^2)
 Ap_max = Ap_0;     %最大通气面积(m^2)
 Vg_max = Ap_0*Lp;     %最大自由体积(m^3)
@@ -120,9 +113,9 @@ Vg_max = Ap_0*Lp;     %最大自由体积(m^3)
 p_min = p0;        %最小压强(Pa)
 e_min = 0;     %最小已烧去肉厚(m)
 s_min = s_0;     %燃烧面最小周长(m)
-m_b_min = rho_p1*s_0*Lp*rb1_0;     %最小燃气生成率(kg/s)
-m_p_min = (phi_m*p0*At / c1);     %最小质量流率(kg/s)
-F_min = 2000*(p0*At / c1);     %最小推力(N)
+m_b_min = rho_p*s_0*Lp*rb_0;     %最小燃气生成率(kg/s)
+m_p_min = (phi_m*p0*At / c);     %最小质量流率(kg/s)
+F_min = 2000*(p0*At / c);     %最小推力(N)
 Ab_min = s_0*Lp;     %最小燃烧面积(m^2)
 Ap_min = Ap_0;     %圆柱最小通气面积(m^2)
 Vg_min = Ap_0*Lp;     %最小自由体积(m^3)
@@ -162,8 +155,6 @@ while (e(i) <= ep)
     %逐项计算其他参数的新值
     rb(i) = alpha_r*p(i)^n_p;
     e(i) = e(i - 1) + rb(i)*dt;
-    s(i) = pi*(dc + 2*e(i));
-    Ap(i) = pi*(dc + 2*e(i))^2 / 4;
     %判断此时处于哪个阶段
     sw(i) = 1;
     if(e(i) <= ep_m)
@@ -180,26 +171,20 @@ while (e(i) <= ep)
     %分阶段计算燃烧周长和通气面积
     switch sw(i)
         case{1}     %内装药阶段
-            p_a = p_a1;
-            p_b = p_b1;
-            n_p = n_p1;
-            alpha_r = alpha_r1;
-            m_b(i) = rho_p1*Ab(i)*rb(i);
-            m_p(i) = phi_m*p(i)*At / c1;
+            s(i) = s(i - 1);
+            Ap(i) = Ap(i - 1);
         case{3}     %外装药阶段
-            p_a = p_a2;
-            p_b = p_b2;
-            n_p = n_p2;
-            alpha_r = alpha_r2;
-            m_b(i) = rho_p2*Ab(i)*rb(i);
-            m_p(i) = phi_m*p(i)*At / c2;
+            s(i) = s(i - 1);
+            Ap(i) = Ap(i - 1);
         otherwise     %其它阶段
-            m_b(i) = m_b(i - 1);
-            m_p(i) = m_p(i - 1);
+            s(i) = s(i - 1);
+            Ap(i) = Ap(i - 1);
     end
     %计算其他参数
     Ab(i) = s(i)*Lp;
     Vg(i) = Ap(i)*Lp;
+    m_b(i) = rho_p*Ab(i)*rb(i);
+    m_p(i) = phi_m*p(i)*At / c;
     F(i) = 2000*m_p(i) + 4.4*At*(p(i)-p0);
     
     %记录最大值
