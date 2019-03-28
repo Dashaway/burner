@@ -26,8 +26,8 @@ At = 7.853982e-5;     %喷管喉部面积(m^2)
 %轮式装药参数
 Dc = 0.238;     %外径(m)
 dc = 0.0868;      %内径(m)
-ep_1 = 0.0155;       %厚肉厚(m)
-ep_2 = 0.0033;       %薄肉厚(m)
+e_s1 = 0.0155;       %厚肉厚(m)
+e_s2 = 0.0033;       %薄肉厚(m)
 n_s = 12;       %轮孔数
 l_s1 = 0.0995;      %内圆弧特征长度(m)
 l_s2 = 0.053;       %外圆弧特征长度(m)
@@ -53,6 +53,12 @@ Gamma = ( (2 / (gamma + 1))^( (gamma + 1) / (2*(gamma - 1)) ) ) ...
 beta_s = 2*pi / n_s;    %轮孔角(rad)
 
 %计算中间值
+as1 = asin((e_s1 + r_s1) / l_s1);       %厚轮辐上部角分数
+as2 = asin((e_s1 + r_s2) / l_s2);       %厚轮辐下部角分数
+as3 = asin((e_s2 + r_s1) / l_s1);       %薄轮辐上部角分数
+as4 = asin((e_s2 + r_s2) / l_s2);       %薄轮辐下部角分数
+h_s1 = l_s1*cos(as1) - l_s2*cos(as2);       %厚轮辐高度
+h_s2 = l_s1*cos(as3) - l_s2*cos(as4);       %薄轮辐高度
 
 %压强项中参数
 p_a = rho_p*alpha_r*phi_alpha*Gamma^2*c^2;
@@ -62,8 +68,23 @@ p_b = phi_m*Gamma^2*c*At;
 %初始参数
 %圆柱装药
 %周长参数
+si1 = (l_s1 + r_s1 + e)*(beta_s - as1 - as3) + (r_s1 + e)*(pi + as1 + as2) ...
+    + h_s1 + h_s2 + (r_s2 + e)*(pi - as2 - as4) ...
+    + (l_s2 - r_s2 - e)*(beta_s - as2 - as4) + (e + dc/2)*beta_s;
+si2 = (l_s1 + r_s1 + e)*(beta_s - as1 - as3) + (r_s1 + e)*(pi/2 + as1) ...
+    + l_s1*cos(as1) - (e + dc/2) ...
+    + (e + dc/2)*asin((l_s2*sin(as2) - r_s2 - e) / (e + dc/2)) ...
+    + (r_s1 + e)*(as3 + asin( l_s1*sin(as3) / (r_s1 + e) ));
 s_0 = pi*dc;
 %通气面积参数
+Api1 = (l_s1^2)*((sin(2*as1) + sin(2*as2)) / 4) ...
+    - (l_s2^2)*((sin(2*as2) + sin(2*as4)) / 4) ...
+    + ((l_s1 + r_s1 + e)^2)*((beta_s - as1 - as3) / 4) ...
+    - ((l_s2 - r_s2 - e)^2)*((beta_s - as2 - as4) / 4) ...
+    + ((r_s1 + e)^2)*((pi + as1 + as3) / 2) ...
+    + ((r_s2 + e)^2)*((pi - as2 - as4) / 2) ...
+    - h_s1*(e_s1 - e) - h_s2*(e_s2 - e) + ((e + dc/2)^2)*beta_s/2;
+    
 Ap_0 = pi*(dc^2) / 4;
 
 %压强项
@@ -77,13 +98,13 @@ Ap_0 = pi*(dc^2) / 4;
 
 %各阶段对应条件
 %     星孔第一阶段，圆柱第一阶段
-%     e1 = ((e <= ep_1) & (e <= ep_2));
+%     e1 = ((e <= e_s1) & (e <= e_s2));
 %     sw = 1;
 %     星孔第二阶段，圆柱第一阶段
-%     e2 = ((e > ep_1) & (e <= ep_2));
+%     e2 = ((e > e_s1) & (e <= e_s2));
 %     sw = 3;
 %程序结束条件
-ep = ep_2;
+ep = e_s2;
 %     e >= ep;
 
 
