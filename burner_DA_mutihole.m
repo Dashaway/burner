@@ -3,12 +3,11 @@
 %燃烧参数计算
 
 
-%190219
-%整理公式
-%完善注释
-
 %190311
 %加入双Y轴图像
+
+%190329
+%双Y轴按比例显示
 
 
 clear;
@@ -23,16 +22,16 @@ long = 100000;        %数组长度
 n = 1:1:long;       %绘图横坐标
 dt = 2e-5;      %步进值
 %燃烧室参数
-Dr = 0.150;       %燃烧室外径(m)
-At = 1.884785e-3;     %喷管喉部面积(m^2)
+Dr = 0.300;       %燃烧室外径(m)
+At = 4.884785e-3;     %喷管喉部面积(m^2)
 %装药参数
-D = 0.150;         %药柱外直径(m)
-r = 0.003;        %微圆弧半径(m)
-l = 0.065;        %弧心距(m)
+D = 0.300;         %药柱外直径(m)
+r = 0.010;        %微圆弧半径(m)
+l = 0.130;        %弧心距(m)
 R = 0.01;       %中心孔(m)
 m_s = 8;        %弧孔药比
-n_s = 4;        %弧数量
-Lp = 0.22;      %药柱长度(m)
+n_s = 3;        %弧数量
+Lp = 0.500;      %药柱长度(m)
 %已知常量
 p0 = 1.02e5;    %初始压强(Pa)
 gamma = 1.2;        %比热比
@@ -448,15 +447,29 @@ yyaxis left;
 plot(t,p,'-','LineWidth',1,'color','k');   
 ylabel('压强(Pa)')
 %设置刻度
-axis([pri*t_max,prx*t_max,-0.5e6,1e7]);
-set(gca,'YTick',0:1e6:1e7);
+per = 0.6;      %定比例
+mag = floor(log10(p_max / per));        %求数量级
+fir = floor((p_max / per) / (10^mag));      %取第一位
+sec = floor((p_max / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
+ran = fir*10^mag + sec*10^(mag - 1);        %定量程
+cal = fir*10^(mag - 1);     %定刻度
+sta = -0.5*10^(mag - 1);        %定起点
+axis([pri*t_max,prx*t_max,sta,ran]);
+set(gca,'YTick',0:cal:ran);
 %激活右侧
 yyaxis right;
 plot(t,F,'-.','LineWidth',1,'color','k');
 ylabel('力(N)');
 %设置刻度
-axis([pri*t_max,prx*t_max,-0.5e4,8e4]);
-set(gca,'YTick',0:1e4:8e4);
+per = 0.8;      %定比例
+mag = floor(log10(p_max / per));        %求数量级
+fir = floor((p_max / per) / (10^mag));      %取第一位
+sec = floor((p_max / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
+ran = fir*10^mag + sec*10^(mag - 1);        %定量程
+cal = fir*10^(mag - 1);     %定刻度
+sta = -0.5*10^(mag - 1);        %定起点
+axis([pri*t_max,prx*t_max,-0.5e4,4e5]);
+set(gca,'YTick',0:4e4:4e5);
 %设置X轴和标题
 xlabel('时间(s)');
 title('压强与推力');
