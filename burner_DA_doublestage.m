@@ -42,7 +42,7 @@ dc = 0.01;      %内径(m)
 ep_c = (Dc - dc) / 2;       %肉厚(m)
 %分段参数
 Lp = 0.49;      %药柱长度(m)
-pers = 0.7347;     %星孔段占比
+pers = 0.7;     %星孔段占比
 Lp_s = Lp*pers;     %星孔段长度
 Lp_c = Lp - Lp_s;       %圆柱段长度
 %已知常量
@@ -92,6 +92,12 @@ Ap_s_0 = 2*n_s*Ap_si0;
 s_c_0 = pi*dc;
 Ap_c_0 = pi*(dc^2) / 4;
 
+Vp_s0 = (pi*(Dr^2) / 4 - Ap_s_0)*Lp_s;       %星孔药柱体积(m^3)
+Vp_c0 = (pi*(Dr^2) / 4 - Ap_c_0)*Lp_c;       %圆柱药柱体积(m^3)
+Vp0 = Vp_s0 + Vp_c0;      %总药柱体积(m^3)
+mp_s0 = Vp_s0*rho_p;     %星孔药柱质量(kg)
+mp_c0 = Vp_c0*rho_p;     %圆柱药柱质量(kg)
+mp = mp_s0 + mp_c0;     %总药柱质量(kg)
 
 %约束条件
 %参数约束条件
@@ -485,7 +491,7 @@ axis ([pri*t_max,prx*t_max,(pri*(F_max - F_min) + F_min), ...
 title('推力');
 xlabel('时间(s)');
 ylabel('力(N)');
-legend('算例2');
+% legend('算例2');
 
 figure;
 hold on;
@@ -495,7 +501,48 @@ axis ([pri*t_max,prx*t_max,(pri*(p_max - p_min) + p_min), ...
 title('燃烧室压力');
 xlabel('时间(s)');
 ylabel('压强(Pa)');
-legend('算例2');
+% legend('算例2');
 
+
+%双Y轴图像
+%打开图，设置左右y轴属性
+left_color = [0 0 0];
+right_color = [0 0 0];
+set(figure,'defaultAxesColorOrder',[left_color;right_color]);
+hold on;
+%激活左侧
+yyaxis left;
+plot(t,p,'-','LineWidth',1,'color','k');   
+ylabel('压强(Pa)')
+%设置刻度
+per = 0.6;      %定比例
+cou = p_max;        %选参数
+mag = floor(log10(cou / per));        %求数量级
+fir = floor((cou / per) / (10^mag));      %取第一位
+sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
+ran = fir*10^mag + sec*10^(mag - 1);        %定量程
+cal = fir*10^(mag - 1);     %定刻度
+sta = -0.5*fir*10^(mag - 1);        %定起点
+axis([pri*t_max,prx*t_max,sta,ran]);
+set(gca,'YTick',0:cal:ran);
+%激活右侧
+yyaxis right;
+plot(t,F,'-.','LineWidth',1,'color','k');
+ylabel('力(N)');
+%设置刻度
+per = 0.8;      %定比例
+cou = F_max;        %选参数
+mag = floor(log10(cou / per));        %求数量级
+fir = floor((cou / per) / (10^mag));      %取第一位
+sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
+ran = fir*10^mag + sec*10^(mag - 1);        %定量程
+cal = fir*10^(mag - 1);     %定刻度
+sta = -0.5*fir*10^(mag - 1);        %定起点
+axis([pri*t_max,prx*t_max,sta,ran]);
+set(gca,'YTick',0:cal:ran);
+%设置X轴和标题
+xlabel('时间(s)');
+title('压强与推力');
+legend('压强', '推力');
 
 %结束

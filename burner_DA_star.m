@@ -68,6 +68,9 @@ Ap0 = 2*n_s*Api0;
 %   + ((r_s + e)^2)*(Ap_g + asin(Ap_f / (r_s + e))) ...
 %   + Ap_f*(sqrt((r_s + e)^2 - Ap_f^2)  + l_s*cos(Ap_g)) ) / 2;
 
+Vp0 = (pi*(D^2) / 4 - Ap0)*Lp;       %药柱体积(m^3)
+mp = Vp0*rho_p;     %药柱质量(kg)
+
 
 %变量
 %计算用变量（已赋初值）

@@ -70,6 +70,14 @@ s_0 = pi*dc;
 %通气面积参数
 Ap_0 = pi*(dc^2) / 4;
 
+
+Vp10 = (pi*(dm^2) / 4 - pi*(dc^2) / 4)*Lp;       %内药柱体积(m^3)
+Vp20 = (pi*(Dr^2) / 4 - pi*(dm^2) / 4)*Lp;       %外药柱体积(m^3)
+Vp0 = Vp10 + Vp20;      %总药柱体积(m^3)
+mp1 = Vp10*rho_p1;     %内药柱质量(kg)
+mp2 = Vp20*rho_p2;     %外药柱质量(kg)
+mp = mp1 + mp2;     %总药柱质量(kg)
+
 %压强项
 p_a = p_a1;
 p_b = p_b1;
@@ -364,7 +372,7 @@ axis ([pri*t_max,prx*t_max,(pri*(F_max - F_min) + F_min), ...
 title('推力');
 xlabel('时间(s)');
 ylabel('力(N)');
-legend('算例2');
+% legend('算例2');
 
 figure;
 hold on;
@@ -374,7 +382,48 @@ axis ([pri*t_max,prx*t_max,(pri*(p_max - p_min) + p_min), ...
 title('燃烧室压力');
 xlabel('时间(s)');
 ylabel('压强(Pa)');
-legend('算例2');
+% legend('算例2');
 
+
+%双Y轴图像
+%打开图，设置左右y轴属性
+left_color = [0 0 0];
+right_color = [0 0 0];
+set(figure,'defaultAxesColorOrder',[left_color;right_color]);
+hold on;
+%激活左侧
+yyaxis left;
+plot(t,p,'-','LineWidth',1,'color','k');   
+ylabel('压强(Pa)')
+%设置刻度
+per = 0.6;      %定比例
+cou = p_max;        %选参数
+mag = floor(log10(cou / per));        %求数量级
+fir = floor((cou / per) / (10^mag));      %取第一位
+sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
+ran = fir*10^mag + sec*10^(mag - 1);        %定量程
+cal = fir*10^(mag - 1);     %定刻度
+sta = -0.5*fir*10^(mag - 1);        %定起点
+axis([pri*t_max,prx*t_max,sta,ran]);
+set(gca,'YTick',0:cal:ran);
+%激活右侧
+yyaxis right;
+plot(t,F,'-.','LineWidth',1,'color','k');
+ylabel('力(N)');
+%设置刻度
+per = 0.8;      %定比例
+cou = F_max;        %选参数
+mag = floor(log10(cou / per));        %求数量级
+fir = floor((cou / per) / (10^mag));      %取第一位
+sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
+ran = fir*10^mag + sec*10^(mag - 1);        %定量程
+cal = fir*10^(mag - 1);     %定刻度
+sta = -0.5*fir*10^(mag - 1);        %定起点
+axis([pri*t_max,prx*t_max,sta,ran]);
+set(gca,'YTick',0:cal:ran);
+%设置X轴和标题
+xlabel('时间(s)');
+title('压强与推力');
+legend('压强', '推力');
 
 %结束

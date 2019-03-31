@@ -43,6 +43,10 @@ Gamma = ( (2 / (gamma + 1))^( (gamma + 1) / (2*(gamma - 1)) ) ) ...
 s0 = n_s*pi*d;      %燃烧面初始周长
 Ap0 = pi*Dr^2 / 4 - n_s*pi*D^2 / 4 + n_s*pi*d^2 / 4;        %初始通气面积
 
+Vp0 = (pi*(Dr^2) / 4 - Ap0)*Lp;       %药柱体积(m^3)
+mp = Vp0*rho_p;     %药柱质量(kg)
+
+
 %约束条件
 
 %程序结束条件

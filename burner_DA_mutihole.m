@@ -20,7 +20,7 @@ close all;
 %计算辅助常量
 long = 100000;        %数组长度
 n = 1:1:long;       %绘图横坐标
-dt = 2e-5;      %步进值
+dt = 5e-5;      %步进值
 %燃烧室参数
 Dr = 0.300;       %燃烧室外径(m)
 At = 4.884785e-3;     %喷管喉部面积(m^2)
@@ -51,6 +51,9 @@ trr = (2*pi*m_s) / (n_s*(m_s + 1));     %弧圆心角
 
 s_a0 = 2*n_s*trr*l + 2*pi*(R + n_s*r);      %燃烧面初始周长
 Ap_a0 = 2*n_s*trr*l*r + n_s*pi*r^2 + pi*R^2;     %初始通气面积
+
+Vp0 = (pi*(Dr^2) / 4 - Ap_a0)*Lp;       %药柱体积(m^3)
+mp = Vp0*rho_p;     %药柱质量(kg)
 
 %约束条件
 %参数约束条件
@@ -420,7 +423,7 @@ axis ([pri*t_max,prx*t_max,(pri*(F_max - F_min) + F_min), ...
 title('推力');
 xlabel('时间(s)');
 ylabel('力(N)');
-legend('算例2');
+% legend('算例2');
 
 figure;
 hold on;
@@ -430,7 +433,7 @@ axis ([pri*t_max,prx*t_max,(pri*(p_max - p_min) + p_min), ...
 title('燃烧室压力');
 xlabel('时间(s)');
 ylabel('压强(Pa)');
-legend('算例2');
+% legend('算例2');
 % text(swc(2)*dt,p(swc(2)),['(',num2str(swc(2)*dt),',',num2str(p(swc(2))),')'],'color','g');
 % text(swc(3)*dt,p(swc(3)),['(',num2str(swc(3)*dt),',',num2str(p(swc(3))),')'],'color','b');
 % text(swc(4)*dt,p(swc(4)),['(',num2str(swc(4)*dt),',',num2str(p(swc(4))),')'],'color','r');
@@ -448,12 +451,13 @@ plot(t,p,'-','LineWidth',1,'color','k');
 ylabel('压强(Pa)')
 %设置刻度
 per = 0.6;      %定比例
-mag = floor(log10(p_max / per));        %求数量级
-fir = floor((p_max / per) / (10^mag));      %取第一位
-sec = floor((p_max / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
+cou = p_max;        %选参数
+mag = floor(log10(cou / per));        %求数量级
+fir = floor((cou / per) / (10^mag));      %取第一位
+sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
 ran = fir*10^mag + sec*10^(mag - 1);        %定量程
 cal = fir*10^(mag - 1);     %定刻度
-sta = -0.5*10^(mag - 1);        %定起点
+sta = -0.5*fir*10^(mag - 1);        %定起点
 axis([pri*t_max,prx*t_max,sta,ran]);
 set(gca,'YTick',0:cal:ran);
 %激活右侧
@@ -462,14 +466,15 @@ plot(t,F,'-.','LineWidth',1,'color','k');
 ylabel('力(N)');
 %设置刻度
 per = 0.8;      %定比例
-mag = floor(log10(p_max / per));        %求数量级
-fir = floor((p_max / per) / (10^mag));      %取第一位
-sec = floor((p_max / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
+cou = F_max;        %选参数
+mag = floor(log10(cou / per));        %求数量级
+fir = floor((cou / per) / (10^mag));      %取第一位
+sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
 ran = fir*10^mag + sec*10^(mag - 1);        %定量程
 cal = fir*10^(mag - 1);     %定刻度
-sta = -0.5*10^(mag - 1);        %定起点
-axis([pri*t_max,prx*t_max,-0.5e4,4e5]);
-set(gca,'YTick',0:4e4:4e5);
+sta = -0.5*fir*10^(mag - 1);        %定起点
+axis([pri*t_max,prx*t_max,sta,ran]);
+set(gca,'YTick',0:cal:ran);
 %设置X轴和标题
 xlabel('时间(s)');
 title('压强与推力');
