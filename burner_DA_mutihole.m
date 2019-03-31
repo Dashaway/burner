@@ -18,12 +18,12 @@ close all;
 %常量
 
 %计算辅助常量
-long = 100000;        %数组长度
+long = 150000;        %数组长度
 n = 1:1:long;       %绘图横坐标
 dt = 5e-5;      %步进值
 %燃烧室参数
 Dr = 0.300;       %燃烧室外径(m)
-At = 4.884785e-3;     %喷管喉部面积(m^2)
+At = 5.026548e-3;     %喷管喉部面积(m^2)
 %装药参数
 D = 0.300;         %药柱外直径(m)
 r = 0.010;        %微圆弧半径(m)
@@ -32,16 +32,18 @@ R = 0.01;       %中心孔(m)
 m_s = 8;        %弧孔药比
 n_s = 3;        %弧数量
 Lp = 0.500;      %药柱长度(m)
+%推进剂参数
+n_p = 0.302;      %压强指数
+rho_p = 1730;       %密度(kg/m^3)
+c = 1600;       %特征速度(m/s)
+rb_0 = 5e-3;      %?初始燃速(m/s)
+alpha_r = 1.71e-4;        %?燃速系数
 %已知常量
 p0 = 1.02e5;    %初始压强(Pa)
 gamma = 1.2;        %比热比
-rho_p = 1730;       %密度(kg/m^3)
-n_p = 0.302;      %压强指数
-c = 1600;       %特征速度(m/s)
-rb_0 = 5e-3;      %?初始燃速(m/s)
-alpha_r = 1.7e-4;        %?燃速系数
 phi_alpha = 1;       %?侵蚀函数
 phi_m = 1;      %?
+
 
 %计算得常量
 Gamma = ( (2 / (gamma + 1))^( (gamma + 1) / (2*(gamma - 1)) ) ) ...
@@ -439,17 +441,19 @@ ylabel('压强(Pa)');
 % text(swc(4)*dt,p(swc(4)),['(',num2str(swc(4)*dt),',',num2str(p(swc(4))),')'],'color','r');
 
 
-%双Y轴图像
-%打开图，设置左右y轴属性
-left_color = [0 0 0];
-right_color = [0 0 0];
-set(figure,'defaultAxesColorOrder',[left_color;right_color]);
+%双y轴2014版
+figure;
 hold on;
-%激活左侧
-yyaxis left;
-plot(t,p,'-','LineWidth',1,'color','k');   
-ylabel('压强(Pa)')
-%设置刻度
+%AX(1)和 AX(2)分别是左右 axes 的句柄，可以用 set()函数处理
+[AX,H1,H2] = plotyy(t,p,t,F); 
+set(AX,'Xlim',[pri*t_max,prx*t_max]);
+xlabel('时间(s)');
+title('压强与推力');
+set(AX(:),'Ycolor','k');
+
+set(get(AX(1),'Ylabel'),'string','压强(Pa)','color','k','linewidth',1.0); 
+set(get(AX(2),'Ylabel'),'string','力(N)','color','k','linewidth',1.0); 
+
 per = 0.6;      %定比例
 cou = p_max;        %选参数
 mag = floor(log10(cou / per));        %求数量级
@@ -458,13 +462,8 @@ sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
 ran = fir*10^mag + sec*10^(mag - 1);        %定量程
 cal = fir*10^(mag - 1);     %定刻度
 sta = -0.5*fir*10^(mag - 1);        %定起点
-axis([pri*t_max,prx*t_max,sta,ran]);
-set(gca,'YTick',0:cal:ran);
-%激活右侧
-yyaxis right;
-plot(t,F,'-.','LineWidth',1,'color','k');
-ylabel('力(N)');
-%设置刻度
+set(AX(1),'Ylim',[sta,ran],'yTick',0:cal:ran);
+
 per = 0.8;      %定比例
 cou = F_max;        %选参数
 mag = floor(log10(cou / per));        %求数量级
@@ -473,12 +472,12 @@ sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
 ran = fir*10^mag + sec*10^(mag - 1);        %定量程
 cal = fir*10^(mag - 1);     %定刻度
 sta = -0.5*fir*10^(mag - 1);        %定起点
-axis([pri*t_max,prx*t_max,sta,ran]);
-set(gca,'YTick',0:cal:ran);
-%设置X轴和标题
-xlabel('时间(s)');
-title('压强与推力');
-legend('压强', '推力');
+set(AX(2),'Ylim',[sta,ran],'yTick',0:cal:ran);
+
+box off;
+set(H1,'LineStyle','-','color','k','linewidth',1.0);
+set(H2,'LineStyle','-.','color','k','linewidth',1.0);
+legend('压强','推力');
 
 
 %结束
