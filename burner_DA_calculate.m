@@ -24,14 +24,7 @@ dt = 5e-5;      %步进值
 %燃烧室参数
 Dr = 0.300;       %燃烧室外径(m)
 At = 5.026548e-3;     %喷管喉部面积(m^2)
-%装药参数
-D = 0.300;         %药柱外直径(m)
-r = 0.010;        %微圆弧半径(m)
-l = 0.130;        %弧心距(m)
-R = 0.01;       %中心孔(m)
-m_s = 8;        %弧孔药比
-n_s = 3;        %弧数量
-Lp = 0.500;      %药柱长度(m)
+
 %推进剂参数
 n_p = 0.302;      %压强指数
 rho_p = 1730;       %密度(kg/m^3)
@@ -101,6 +94,9 @@ F = 2000*(p0*At / c)*ones(1,long);     %推力(N)
 Ab = s_a0*Lp*ones(1,long);     %燃烧面积(m^2)
 Ap = Ap_a0*ones(1,long);     %通气面积(m^2)
 Vg = Ap*Lp;     %自由体积(m^3)
+df = zeros(1,long);
+ddf = zeros(1,long);
+st = zeros(2,100);
 %最大值变量
 p_max = p0;        %最大压强(Pa)
 e_max = 0;     %最大已烧去肉厚(m)
@@ -262,6 +258,19 @@ while (e(i) <= ep)
     m_b(i) = rho_p*Ab(i)*rb(i);
     m_p(i) = phi_m*p(i)*At / c;
     F(i) = 2000*m_p(i) + 4.4*At*(p(i)-p0);
+    if(F(i) < 0 )
+        F(i) = 0;
+    end
+    if (i  <= 1)
+        df(i) = 0;
+    else
+        df(i) = F(i) - F(i - 1);
+    end
+    if (i  <= 1)
+        ddf(i) = 0;
+    else
+        ddf(i) = df(i) - df(i - 1);
+    end
     
     %记录最大值
     if(p(i) > p_max)
@@ -343,6 +352,8 @@ Ap(i:1:long) = [];
 Vg(i:1:long) = [];
 sw(i:1:long) = [];
 swc(:,j:100) = [];
+df(i:1:long) = [];
+ddf(i:1:long) = [];
 t = dt*n;
 t_max = dt*(i - 1);     %燃烧总时间
 prx = 1.05;
@@ -354,34 +365,10 @@ str = [' t_max = ',num2str(t_max)];
 disp(str);
 
 %数据输出
-%写入文档
 
-close all;
 
-figure;
-hold on;
 
-per = 1;      %定比例
-plot(t,per*F,'color','k','LineStyle','-');
-per = 0.9;      %定比例
-plot(t,per*F,'color','k','LineStyle','-.');
 
-per = 0.8;      %定比例
-plot(t,per*F,'color','k','LineStyle','--');
-per = 0.85;      %定比例
-plot(t,per*F,'color','k','LineStyle',':');
-
-per = 0.7;      %定比例
-plot(t,per*F,'color','k','LineStyle','-','LineWidth',2);
-per = 0.5;      %定比例
-plot(t,per*F,'color','k','LineStyle','-','LineWidth',1.5);
-
-axis ([pri*t_max,prx*t_max,(pri*(F_max - F_min) + F_min), ...
-    (prx*(F_max - F_min) + F_min)]);
-
-title('推力');
-xlabel('时间(s)');
-ylabel('力(N)');
 
 
 %结束
