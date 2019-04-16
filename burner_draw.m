@@ -114,7 +114,7 @@ F_6 = F_6';
 close all;
 figure;
 hold on;
-
+box on;
 
 plot(t_1,F_1,'color','k','LineStyle','-','LineWidth',0.8);
 plot(t_2,F_2,'color','k','LineStyle',':','LineWidth',1.5);
