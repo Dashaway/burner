@@ -6,6 +6,9 @@
 %190327
 %轮式装药
 
+%190503
+%计算速度
+
 
 clear;
 close all;
@@ -18,6 +21,9 @@ close all;
 long = 150000;        %数组长度
 n = 1:1:long;       %绘图横坐标
 dt = 5e-5;      %步进值
+%弹体参数
+m_c = 400;      %固定质量(kg)
+s_t = 0.1018;        %阻力截面积(m^2)
 %燃烧室参数
 Dr = 0.240;       %燃烧室外径(m)
 % At = 1.884785e-3;     %喷管喉部面积(m^2)
@@ -46,6 +52,7 @@ p0 = 1.02e5;    %初始压强(Pa)
 gamma = 1.2;        %比热比
 phi_alpha = 1;       %?侵蚀函数
 phi_m = 1;      %?
+
 
 %计算得常量
 Gamma = ( (2 / (gamma + 1))^( (gamma + 1) / (2*(gamma - 1)) ) ) ...
@@ -104,7 +111,8 @@ Api0 = (l_s1^2)*((sin(2*as1) + sin(2*as2)) / 4) ...
     - h_s1*e_s1 - h_s2*e_s2 + ((dc/2)^2)*beta_s/2;
 Ap_0 = n_s*Api0;
 
-Vp0 = (pi*(Dr^2) / 4 - Ap_0)*Lp;       %药柱体积(m^3)
+Vc = (pi*(Dc^2) / 4)*Lp;        %腔室体积(m^3)
+Vp0 = (pi*(Dc^2) / 4 - Ap_0)*Lp;       %药柱初始体积(m^3)
 mp = Vp0*rho_p;     %药柱质量(kg)
 %压强项
 
@@ -131,7 +139,7 @@ ep = e_s1;
 %计算用变量数组（已赋初值）
 p = p0*ones(1,long);        %实际压强(Pa)
 rb = rb_0*ones(1,long);     %燃速(m/s)
-e = 0*ones(1,long);     %已烧去肉厚(m)
+e = zeros(1,long);     %已烧去肉厚(m)
 s = s_0*ones(1,long);     %燃烧面实际周长(m)
 m_b = rho_p*s_0*Lp*rb_0*ones(1,long);     %燃气生成率(kg/s)
 m_p = (phi_m*p0*At / c)*ones(1,long);     %质量流率(kg/s)
@@ -139,6 +147,11 @@ F = 2000*(p0*At / c)*ones(1,long);     %推力(N)
 Ab = s_0*Lp*ones(1,long);     %燃烧面积(m^2)
 Ap = Ap_0*ones(1,long);     %通气面积(m^2)
 Vg = Ap*Lp;     %自由体积(m^3)
+m_z = (m_c + mp)*ones(1,long);      %总质量(kg)
+a = ( 2000*(p0*At / c) / (m_c + mp))*ones(1,long);     %加速度(N/m^2)
+V = zeros(1,long);      %速度(m/s)
+f = zeros(1,long);      %阻力(N)
+
 %最大值变量
 p_max = p0;        %最大压强(Pa)
 e_max = 0;     %最大已烧去肉厚(m)
@@ -245,6 +258,10 @@ while (e(i) <= ep)
     m_b(i) = rho_p*Ab(i)*rb(i);
     m_p(i) = phi_m*p(i)*At / c;
     F(i) = 2000*m_p(i) + 4.4*At*(p(i)-p0);
+    f(i) = 0;
+    m_z(i) = m_c + (Vc - Vg(i))*rho_p;
+    a(i) = (F(i) - f(i)) / m_z(i);
+    V(i) = V(i - 1) + a(i);
     
     %记录最大值
     if(p(i) > p_max)
@@ -274,6 +291,7 @@ while (e(i) <= ep)
     if(Vg(i) > Vg_max)
         Vg_max = Vg(i);
     end
+
     
     %记录最小值
     if(p(i) < p_min)
@@ -324,6 +342,10 @@ F(i:1:long) = [];
 Ab(i:1:long) = [];
 Ap(i:1:long) = [];
 Vg(i:1:long) = [];
+f(i:1:long) = [];
+m_z(i:1:long) = [];
+a(i:1:long) = [];
+V(i:1:long) = [];
 sw(i:1:long) = [];
 swc(:,j:100) = [];
 
