@@ -13,7 +13,12 @@
 clear;
 close all;
 %初始值设定
-
+%读取数据
+% FileName = '阻力系数.xlsx';
+% SheetName = 'sheet1';
+% read = xlsread(FileName,SheetName,'C4:D163');
+% v_f = read(:,1)';
+% c_f = read(:,2)';
 
 %常量
 
@@ -23,7 +28,9 @@ n = 1:1:long;       %绘图横坐标
 dt = 5e-5;      %步进值
 %弹体参数
 m_c = 400;      %固定质量(kg)
-s_t = 0.1018;        %阻力截面积(m^2)
+s_f = 0.1018;        %阻力截面积(m^2)
+C_x0 = 0.2;
+V0 = 0;     %初始速度(m/s)
 %燃烧室参数
 Dr = 0.240;       %燃烧室外径(m)
 % At = 1.884785e-3;     %喷管喉部面积(m^2)
@@ -52,6 +59,10 @@ p0 = 1.02e5;    %初始压强(Pa)
 gamma = 1.2;        %比热比
 phi_alpha = 1;       %?侵蚀函数
 phi_m = 1;      %?
+g = 9.8;        %重力加速度(m/s^2)
+Ma = 330;       %音速(m/s)
+rho_air = 1.1691;       %空气密度(kg/m^3)
+
 
 
 %计算得常量
@@ -149,7 +160,7 @@ Ap = Ap_0*ones(1,long);     %通气面积(m^2)
 Vg = Ap*Lp;     %自由体积(m^3)
 m_z = (m_c + mp)*ones(1,long);      %总质量(kg)
 a = ( 2000*(p0*At / c) / (m_c + mp))*ones(1,long);     %加速度(N/m^2)
-V = zeros(1,long);      %速度(m/s)
+V = V0*ones(1,long);      %速度(m/s)
 f = zeros(1,long);      %阻力(N)
 
 %最大值变量
@@ -162,6 +173,11 @@ F_max = 2000*(p0*At / c);     %最大推力(N)
 Ab_max = s_0*Lp;     %最大燃烧面积(m^2)
 Ap_max = Ap_0;     %最大通气面积(m^2)
 Vg_max = Ap_0*Lp;     %最大自由体积(m^3)
+m_z_max = (m_c + mp);
+a_max = ( 2000*(p0*At / c) / (m_c + mp));
+V_max = V0;
+f_max = 0;
+
 %最小值变量
 p_min = p0;        %最小压强(Pa)
 e_min = 0;     %最小已烧去肉厚(m)
@@ -172,6 +188,10 @@ F_min = 2000*(p0*At / c);     %最小推力(N)
 Ab_min = s_0*Lp;     %最小燃烧面积(m^2)
 Ap_min = Ap_0;     %圆柱最小通气面积(m^2)
 Vg_min = Ap_0*Lp;     %最小自由体积(m^3)
+m_z_min = (m_c + mp);
+a_min = ( 2000*(p0*At / c) / (m_c + mp));
+V_min = V0;
+f_min = 0;
 %循环变量
 i = 1;
 j = 1;
@@ -258,10 +278,11 @@ while (e(i) <= ep)
     m_b(i) = rho_p*Ab(i)*rb(i);
     m_p(i) = phi_m*p(i)*At / c;
     F(i) = 2000*m_p(i) + 4.4*At*(p(i)-p0);
-    f(i) = 0;
     m_z(i) = m_c + (Vc - Vg(i))*rho_p;
-    a(i) = (F(i) - f(i)) / m_z(i);
+    a(i) = (F(i) - f(i - 1)) / m_z(i) ;
     V(i) = V(i - 1) + a(i);
+    f(i) = (s_f*rho_air / 2)*C_x0*((V(i) / Ma)^2);
+    
     
     %记录最大值
     if(p(i) > p_max)
@@ -290,6 +311,18 @@ while (e(i) <= ep)
     end
     if(Vg(i) > Vg_max)
         Vg_max = Vg(i);
+    end
+    if(m_z(i) > m_z_max)
+        m_z_max = m_z(i);
+    end
+    if(a(i) > a_max)
+        a_max = a(i);
+    end
+    if(V(i) > V_max)
+        V_max = V(i);
+    end
+    if(f(i) > f_max)
+        f_max = f(i);
     end
 
     
@@ -320,6 +353,18 @@ while (e(i) <= ep)
     end
     if(Vg(i) < Vg_min)
         Vg_min = Vg(i);
+    end
+    if(m_z(i) < m_z_min)
+        m_z_min = m_z(i);
+    end
+    if(a(i) < a_min)
+        a_min = a(i);
+    end
+    if(V(i) < V_min)
+        V_min = V(i);
+    end
+    if(f(i) < f_min)
+        f_min = f(i);
     end
     
     %数组长度约束
@@ -441,6 +486,47 @@ title('燃烧室压力');
 xlabel('时间(s)');
 ylabel('压强(Pa)');
 legend('算例2');
+
+
+figure;
+hold on;
+plot(t,m_z);
+axis ([pri*t_max,prx*t_max,(pri*(m_z_max - m_z_min) + m_z_min), ...
+    (prx*(m_z_max - m_z_min) + m_z_min)]);
+title('总质量');
+xlabel('时间(s)');
+ylabel('质量(kg)');
+% legend('算例2');
+
+figure;
+hold on;
+plot(t,a);
+axis ([pri*t_max,prx*t_max,(pri*(a_max - a_min) + a_min), ...
+    (prx*(a_max - a_min) + a_min)]);
+title('加速度');
+xlabel('时间(s)');
+ylabel('加速度(m/s^2)');
+% legend('算例2');
+
+figure;
+hold on;
+plot(t,V);
+axis ([pri*t_max,prx*t_max,(pri*(V_max - V_min) + V_min), ...
+    (prx*(V_max - V_min) + V_min)]);
+title('速度');
+xlabel('时间(s)');
+ylabel('速度(m/s)');
+legend('算例2');
+
+figure;
+hold on;
+plot(t,f);
+axis ([pri*t_max,prx*t_max,(pri*(f_max - f_min) + f_min), ...
+    (prx*(f_max - f_min) + f_min)]);
+title('阻力');
+xlabel('时间(s)');
+ylabel('力(N)');
+% legend('算例2');
 
 
 %结束
