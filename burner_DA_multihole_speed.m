@@ -3,12 +3,12 @@
 %燃烧参数计算
 
 
-%190311
-%加入双Y轴图像
-
 %190329
 %双Y轴按比例显示
 
+
+%190512
+%加入阻力，计算速度
 
 clear;
 close all;
@@ -22,7 +22,7 @@ c_f = read(:,2)';
 %常量
 
 %计算辅助常量
-long = 150000;        %数组长度
+long = 250000;        %数组长度
 n = 1:1:long;       %绘图横坐标
 dt = 5e-5;      %步进值
 %弹体参数
@@ -398,17 +398,18 @@ while (e(i) <= ep)
     end
     
 end
- j = 1 ;
- long_e = 150000;
+ j = 1;
+long_e = long - i;
  m_e = m_z(i);
  a_e = zeros(1,long_e);
  V_e = V(i)*ones(1,long_e);
  f_e = f(i)*ones(1,long_e);
+ V(i + 1) = V(i);
 while(V_e(j) > 10)
     j = j + 1 ;
     a_e(j) = (- f_e(j - 1)) / m_e;
     V_e(j) = V_e(j - 1) + a_e(j)*dt;
-    
+    V(i + j) = V_e(j);
     %计算阻力系数
     if(V_e(j) > v_f(k))
         if(V_e(j) < v_f(160))
@@ -430,6 +431,7 @@ while(V_e(j) > 10)
     end
 end
 %循环后处理
+t_z = dt*n;
 i = i + 1;
 n(i:1:long) = [];
 p(i:1:long) = [];
@@ -445,6 +447,7 @@ Vg(i:1:long) = [];
 f(i:1:long) = [];
 m_z(i:1:long) = [];
 a(i:1:long) = [];
+V_z = V;
 V(i:1:long) = [];
 sw(i:1:long) = [];
 swc(:,j:100) = [];
@@ -641,6 +644,16 @@ plot(t_e,V_e);
 axis ([prx*t_max,prx*t_e_max,(pri*(V_e_max - V_e_min) + V_e_min), ...
     (prx*(V_e_max - V_e_min) + V_e_min)]);
 title('终末速度');
+xlabel('时间(s)');
+ylabel('速度(m/s)');
+
+
+figure;
+hold on;
+plot(t_z,V_z);
+axis ([pri*t_max,prx*t_e_max,(pri*(V_max - V_min) + V_min), ...
+    (prx*(V_max - V_min) + V_min)]);
+title('总速度');
 xlabel('时间(s)');
 ylabel('速度(m/s)');
 
