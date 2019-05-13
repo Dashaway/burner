@@ -301,6 +301,12 @@ while (e(i) <= ep)
             C_x = c_f(k);
         end
     end
+    if(k > 1)
+        if(V(i) < v_f(k - 1))
+            k = k - 1;
+            C_x = c_f(k);
+        end
+    end
     
     f(i) = (s_f*rho_air / 2)*C_x*((V(i) / Ma)^2);
     
@@ -392,7 +398,37 @@ while (e(i) <= ep)
     end
     
 end
-
+ j = 1 ;
+ long_e = 150000;
+ m_e = m_z(i);
+ a_e = zeros(1,long_e);
+ V_e = V(i)*ones(1,long_e);
+ f_e = f(i)*ones(1,long_e);
+while(V_e(j) > 10)
+    j = j + 1 ;
+    a_e(j) = (- f_e(j - 1)) / m_e;
+    V_e(j) = V_e(j - 1) + a_e(j)*dt;
+    
+    %计算阻力系数
+    if(V_e(j) > v_f(k))
+        if(V_e(j) < v_f(160))
+            k = k + 1;
+            C_x = c_f(k);
+        end
+    end
+    if(k > 1)
+        if(V(j) < v_f(k - 1))
+            k = k - 1;
+            C_x = c_f(k);
+        end
+    end
+    
+    f_e(j) = (s_f*rho_air / 2)*C_x*((V_e(j) / Ma)^2);
+    
+    if (j >= long_e)
+        break;
+    end
+end
 %循环后处理
 i = i + 1;
 n(i:1:long) = [];
@@ -416,6 +452,16 @@ t = dt*n;
 t_max = dt*(i - 1);     %燃烧总时间
 prx = 1.05;
 pri = -0.05;
+
+%终末
+n_e = 1:1:long_e;
+t_e = t_max + dt*n_e;
+t_e_max = t_max + dt*(j);
+V_e_max = V_e(1);
+V_e_min = V_e(j);
+
+
+
 
 str = [' t_max = ',num2str(t_max)];
 disp(str);
@@ -589,5 +635,13 @@ xlabel('时间(s)');
 ylabel('力(N)');
 % legend('算例2');
 
+figure;
+hold on;
+plot(t_e,V_e);
+axis ([prx*t_max,prx*t_e_max,(pri*(V_e_max - V_e_min) + V_e_min), ...
+    (prx*(V_e_max - V_e_min) + V_e_min)]);
+title('终末速度');
+xlabel('时间(s)');
+ylabel('速度(m/s)');
 
 %结束
