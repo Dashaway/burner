@@ -466,7 +466,7 @@ V_e_min = V_e(j);
 
 
 
-str = [' t_max = ',num2str(t_max)];
+str = [' 燃烧总时间： ',num2str(t_max),'s'];
 disp(str);
 
 %数据输出
@@ -620,7 +620,8 @@ ylabel('加速度(m/s^2)');
 
 figure;
 hold on;
-plot(t,V);
+plot(t,V,'k');
+box on;
 axis ([pri*t_max,prx*t_max,(pri*(V_max - V_min) + V_min), ...
     (prx*(V_max - V_min) + V_min)]);
 title('速度');
@@ -650,7 +651,8 @@ ylabel('速度(m/s)');
 
 figure;
 hold on;
-plot(t_z,V_z);
+plot(t_z,V_z,'k');
+box on;
 axis ([pri*t_max,prx*t_e_max,(pri*(V_max - V_min) + V_min), ...
     (prx*(V_max - V_min) + V_min)]);
 title('总速度');
