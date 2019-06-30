@@ -632,12 +632,12 @@ hold on;
 %AX(1)和 AX(2)分别是左右 axes 的句柄，可以用 set()函数处理
 [AX,H1,H2] = plotyy(t,p,t,F); 
 set(AX,'Xlim',[pri*t_max,prx*t_max]);
-xlabel('时间(s)');
-title('压强与推力');
+xlabel('t/s');
+% title('压强与推力');
 set(AX(:),'Ycolor','k');
 
-set(get(AX(1),'Ylabel'),'string','压强(Pa)','color','k','linewidth',1.0); 
-set(get(AX(2),'Ylabel'),'string','力(N)','color','k','linewidth',1.0); 
+set(get(AX(1),'Ylabel'),'string','P/Pa','color','k','linewidth',1.0); 
+set(get(AX(2),'Ylabel'),'string','F/N','color','k','linewidth',1.0); 
 
 per = 0.6;      %定比例
 cou = p_max;        %选参数
@@ -645,9 +645,9 @@ mag = floor(log10(cou / per));        %求数量级
 fir = floor((cou / per) / (10^mag));      %取第一位
 sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
 ran = fir*10^mag + sec*10^(mag - 1);        %定量程
-cal = fir*10^(mag - 1);     %定刻度
+cal = 1*fir*10^(mag - 1);     %定刻度
 sta = -0.5*fir*10^(mag - 1);        %定起点
-set(AX(1),'Ylim',[sta,ran],'yTick',0:cal:ran);
+set(AX(1),'Ylim',[sta,ran],'yTick',0:cal:ran,'fontsize',20);
 
 per = 0.8;      %定比例
 cou = F_max;        %选参数
@@ -655,14 +655,14 @@ mag = floor(log10(cou / per));        %求数量级
 fir = floor((cou / per) / (10^mag));      %取第一位
 sec = floor((cou / per - fir*10^mag) / (10^(mag - 1)));       %取第二位
 ran = fir*10^mag + sec*10^(mag - 1);        %定量程
-cal = fir*10^(mag - 1);     %定刻度
+cal = 1*fir*10^(mag - 1);     %定刻度
 sta = -0.5*fir*10^(mag - 1);        %定起点
-set(AX(2),'Ylim',[sta,ran],'yTick',0:cal:ran);
+set(AX(2),'Ylim',[sta,ran],'yTick',0:cal:ran,'fontsize',20);
 
 box off;
-set(H1,'LineStyle','-','color','k','linewidth',1.0);
-set(H2,'LineStyle','-.','color','k','linewidth',1.0);
-legend('压强','推力');
+set(H1,'LineStyle','-','color','k','linewidth',2);
+set(H2,'LineStyle','-.','color','k','linewidth',2);
+legend('P','F');
 
 
 figure;
